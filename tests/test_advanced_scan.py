@@ -15,7 +15,7 @@ from pentest_agent.engines import infra
 from pentest_agent.engines.secrets import extract_endpoints, scan_secrets
 from pentest_agent.engines.webapi import analyze_jwt, check_csrf_forms, check_graphql
 from pentest_agent.engines.webscan import ScanConfig, WebScanner
-from tests.mock_vuln_app import MockVulnServer
+from pentest_agent.labs.demo_webapp import DemoVulnServer
 
 
 # ------------------------------------------------------------------ secrets
@@ -88,7 +88,7 @@ def test_csrf_form_without_token():
 def test_graphql_introspection_via_http_client():
     from pentest_agent.core.http import HttpClient
 
-    with MockVulnServer() as server:
+    with DemoVulnServer() as server:
         client = HttpClient(server.base_url)
         findings = check_graphql(client, server.base_url)
         client.close()
@@ -98,7 +98,7 @@ def test_graphql_introspection_via_http_client():
 
 # ------------------------------------------------------- 扫描器进阶检测项
 def test_scanner_advanced_findings():
-    with MockVulnServer() as server:
+    with DemoVulnServer() as server:
         config = ScanConfig.for_profile("quick")
         config.modules = {"headers", "files", "secrets", "web", "api"}
         config.time_based = False

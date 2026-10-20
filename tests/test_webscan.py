@@ -1,4 +1,4 @@
-"""通用 Web 扫描引擎测试（离线，使用本地 mock 漏洞应用）。"""
+"""通用 Web 扫描引擎测试（离线，使用内置真实漏洞演示靶场）。"""
 
 from __future__ import annotations
 
@@ -11,12 +11,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pentest_agent.core.scope import ScopeError
 from pentest_agent.engines.webscan import ScanConfig, WebScanner
-from tests.mock_vuln_app import MockVulnServer
+from pentest_agent.labs.demo_webapp import DemoVulnServer
 
 
 @pytest.fixture(scope="module")
-def mock_server():
-    with MockVulnServer() as server:
+def demo_server():
+    with DemoVulnServer() as server:
         yield server
 
 
@@ -33,8 +33,8 @@ def _scan(base_url: str, profile: str = "quick") -> object:
         scanner.close()
 
 
-def test_recon_and_config_findings(mock_server):
-    run = _scan(mock_server.base_url, "quick")
+def test_recon_and_config_findings(demo_server):
+    run = _scan(demo_server.base_url, "quick")
     titles = {finding.title for finding in run.findings}
     assert "缺少安全响应头" in titles
     assert "服务版本信息泄露" in titles
@@ -43,8 +43,8 @@ def test_recon_and_config_findings(mock_server):
     assert any(finding.severity == "Critical" for finding in run.findings)
 
 
-def test_active_vulnerability_findings(mock_server):
-    run = _scan(mock_server.base_url, "quick")
+def test_active_vulnerability_findings(demo_server):
+    run = _scan(demo_server.base_url, "quick")
     categories = {finding.category for finding in run.findings}
     titles = {finding.title for finding in run.findings}
     assert "SQL 注入" in categories
@@ -64,8 +64,8 @@ def test_active_vulnerability_findings(mock_server):
             assert finding.remediation, f"{finding.title} 缺少修复建议"
 
 
-def test_recon_profile_has_no_active_findings(mock_server):
-    run = _scan(mock_server.base_url, "recon")
+def test_recon_profile_has_no_active_findings(demo_server):
+    run = _scan(demo_server.base_url, "recon")
     categories = {finding.category for finding in run.findings}
     assert "SQL 注入" not in categories
     assert "命令注入" not in categories
@@ -79,8 +79,8 @@ def test_scope_guard_rejects_public_target():
     scanner.close()
 
 
-def test_finding_serialization_has_security_fields(mock_server):
-    run = _scan(mock_server.base_url, "quick")
+def test_finding_serialization_has_security_fields(demo_server):
+    run = _scan(demo_server.base_url, "quick")
     data = run.findings[0].to_dict()
     for key in ("category", "cwe", "remediation", "cvss"):
         assert key in data

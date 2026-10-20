@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """对多个本地授权靶场批量执行通用 Web 渗透扫描（多靶场测试脚本）。
 
-前置条件：各靶场已在 127.0.0.1 上启动（DVWA 4280、SQLi-Labs 8085、Mock 8899、
+前置条件：各靶场已在 127.0.0.1 上启动（DVWA 4280、SQLi-Labs 8085、内置演示靶场 8899、
 Juice Shop 13000、WebGoat 18080、VAmPI 15000、DSVW 8898、Vulpy 8897、
 PyGoat 8896、NodeGoat 8895 等，可按需修改 LABS）。
 结果写入 reports/labs_matrix/<slug>/，可配合聚合脚本生成汇总报告。
@@ -22,7 +22,7 @@ OUT = ROOT / "reports" / "labs_matrix"
 LABS = {
     "dvwa": "http://127.0.0.1:4280/",
     "sqli-labs": "http://127.0.0.1:8085/",
-    "mock-vuln": "http://127.0.0.1:8899/",
+    "demo-vuln": "http://127.0.0.1:8899/",
     "juice-shop": "http://127.0.0.1:13000/",
     "webgoat": "http://127.0.0.1:18080/WebGoat/",
     "vampi": "http://127.0.0.1:15000/",

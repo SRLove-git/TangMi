@@ -17,7 +17,7 @@ type Mode = "local" | "custom";
 const PRESETS = [
   { name: "DVWA 本地靶场", target: "http://127.0.0.1:4280" },
   { name: "SQLi-Labs 本地靶场", target: "http://127.0.0.1:8085" },
-  { name: "Mock 演示漏洞站", target: "http://127.0.0.1:8899" },
+  { name: "内置演示漏洞站", target: "http://127.0.0.1:8899" },
 ];
 
 const KIND_LABEL: Record<string, string> = {

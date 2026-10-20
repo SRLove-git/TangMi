@@ -46,7 +46,7 @@ const PRESETS: Array<{ label: string; method: string; url: string; headers: stri
     body: "",
   },
   {
-    label: "Mock 演示站搜索",
+    label: "演示站搜索（SQLi）",
     method: "POST",
     url: "http://127.0.0.1:8899/search",
     headers: "Content-Type: application/x-www-form-urlencoded",

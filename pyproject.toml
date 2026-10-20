@@ -25,6 +25,7 @@ browser = ["playwright>=1.40"]
 
 [project.scripts]
 pentest-agent = "pentest_agent.cli:main"
+pentest-agent-mcp = "pentest_agent.mcp_server:main"
 
 [tool.setuptools.packages.find]
 include = ["pentest_agent*"]

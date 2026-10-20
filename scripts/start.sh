@@ -35,8 +35,8 @@ if [ ! -d web/dist ]; then
 fi
 
 if [ "$WITH_DEMO" = "1" ]; then
-  echo "[*] 启动演示漏洞站 http://127.0.0.1:8899"
-  "$PYTHON" scripts/demo_target.py >/tmp/pentest_demo_target.log 2>&1 &
+  echo "[*] 启动演示漏洞站 http://127.0.0.1:8899（真实漏洞靶场）"
+  "$PYTHON" -m pentest_agent demo >/tmp/pentest_demo_target.log 2>&1 &
 fi
 if [ "$WITH_LABS" = "1" ]; then
   echo "[*] 启动本地靶场（DVWA / SQLi-Labs）"

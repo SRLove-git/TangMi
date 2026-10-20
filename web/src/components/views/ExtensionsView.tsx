@@ -654,14 +654,14 @@ export default function ExtensionsView({ onNotify }: Props) {
                   className="btn tiny"
                   onClick={() =>
                     newServer({
-                      name: "Demo MCP（本仓库）",
+                      name: "Pentest Tools（内置安全工具）",
                       command: "python3",
-                      argsText: "scripts/demo_mcp_server.py",
-                      description: "仓库自带演示 MCP：echo / now / add / wordlist",
+                      argsText: "-m\npentest_agent\nmcp-server",
+                      description: "真实安全工具：DNS / HTTP 探测 / 端口 / TLS / hash / JWT 分析",
                     })
                   }
                 >
-                  <Terminal size={12} /> 本仓库演示 Server
+                  <Terminal size={12} /> 内置安全工具 Server
                 </button>
                 <button
                   className="btn tiny"
