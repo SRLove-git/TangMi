@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pentest-agent"
+version = "1.1.0"
+description = "完整网络安全渗透测试平台：靶场 AI + 通用扫描 + 资产/漏洞管理"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Pentest Agent" }]
+keywords = ["security", "pentest", "vulnerability-management", "attack-surface", "dvwa", "sqli-labs", "automation"]
+dependencies = [
+    "requests>=2.31.0",
+    "rich>=13.0.0",
+    "PyYAML>=6.0",
+    "flask>=3.0.0",
+    "dnspython>=2.6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+browser = ["playwright>=1.40"]
+
+[project.scripts]
+pentest-agent = "pentest_agent.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pentest_agent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -m 'not live'"
+markers = [
+    "live: 需要本地靶场正在运行（默认不执行，使用 -m live 启用）",
+]

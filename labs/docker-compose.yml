@@ -1,0 +1,45 @@
+name: pentest-labs
+
+services:
+  dvwa-db:
+    image: mariadb:10.6
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: dvwa
+      MARIADB_USER: dvwa
+      MARIADB_PASSWORD: p@ssw0rd
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    volumes:
+      - dvwa-db:/var/lib/mysql
+
+  dvwa:
+    image: pentest-agent/dvwa:local
+    depends_on:
+      dvwa-db:
+        condition: service_healthy
+    environment:
+      DB_SERVER: dvwa-db
+      DB_DATABASE: dvwa
+      DB_USER: dvwa
+      DB_PASSWORD: p@ssw0rd
+      DEFAULT_SECURITY_LEVEL: low
+      RECAPTCHA_PUBLIC_KEY: ""
+      RECAPTCHA_PRIVATE_KEY: ""
+    ports:
+      - 127.0.0.1:4280:80
+
+  sqli-labs:
+    image: acgpiano/sqli-labs:latest
+    platform: linux/amd64
+    volumes:
+      - sqli-db:/var/lib/mysql
+    ports:
+      - 127.0.0.1:8085:80
+
+volumes:
+  dvwa-db:
+  sqli-db:

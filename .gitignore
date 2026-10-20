@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# 本地靶场源码（首次运行 `pentest_agent labs up` 会自动 clone）
+reference/
+
+# 运行产物
+reports/pentest_results_*.json
+reports/pentest_report_*.md
+/tmp/
+
+# 系统文件
+.DS_Store
+
+# Web 控制台
+web/node_modules/
+*.tsbuildinfo
+web_runs/
+
+# Web 对话数据
+web_data/
+
+# 本地工作/实验产物（体积大，含临时 venv）
+.report_work/
+.ppt_work/
+
+# 课程报告 / 汇报等个人交付物（含姓名学号，默认不上传）
+*.docx
+*.pptx
+
+# 生成的报告（保留 reports/pentest_report.md/html 与 pentest_results.json 作为示例/测试夹具）
+reports/pentest_report_*.html
+reports/pentest_report_*.json
+reports/learning_report_*.md
+reports/labs_matrix/

@@ -1,0 +1,9 @@
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+rich>=13.0.0
+PyYAML>=6.0
+pytest>=8.0.0
+# 可选：DOM XSS / CSP 浏览器级验证（pip install playwright，复用本机 Chrome）
+# playwright>=1.40
+flask>=3.0.0
+dnspython>=2.6.0
