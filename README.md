@@ -44,8 +44,8 @@
 - **AI 教学模式（靶场导师）**：输入框可在「执行模式 / 教学模式」间切换；教学模式接入 OpenAI 兼容 LLM（DeepSeek / OpenAI / 本地 Ollama 均可），把问题连同当前靶场上下文交给模型，以助教方式给思路、分层提示和原理解析（默认不剧透，明确要求才给完整解法），与执行模式共用同一套「思考过程 + 工具卡片 + 流式回复 + 停止」对话 UI，卡住时直接问 AI 即可。
 - **完整学习闭环**：顶部「学习」页把 DVWA 76 关 + SQLi-Labs 69 关做成进度矩阵 —— 标记在学/已掌握/待复习、写错题笔记、看四难度源码 diff、**19+13 张知识卡片**；**AI 出题 + 判题**（≥80 分自动标记已掌握、逐题点评）、**间隔复习**（3/7/14/30 天到期提醒 + 连续学习天数）、**一键导出 Markdown 学习报告**（可选 AI 教练建议）；聊天里的「提示①②③ / 给答案 / 我懂了」按钮会把提示层级与掌握状态自动写入学习档案；⌘K 全局命令面板可搜页面 / 关卡 / 靶场。
 - **请求重放器**：内置简化版 Repeater，手工改 method / URL / headers / body 重放请求，实时查看原始响应、响应头与沙箱渲染结果，学 SQLi / XSS / 越权时最直接的验证工具。
-- **靶场部署中心**：顶部「靶场部署」页内置 16 个常见公开靶场（Juice Shop / WebGoat / Mutillidae / bWAPP / Pikachu / Upload-Labs / DVGA / VAmPI / Metasploitable2 / Redis 未授权等），一键 Docker 部署、实时日志、自动端口分配、自动复用本机已有容器，也可以在对话里直接说「部署 Juice Shop」让 Agent 安装。
-- **工程化**：`HttpClient` 统一会话/证据/限速/重试，`Finding/LabRun` 数据模型，SQLite 资产/漏洞台账，Markdown + HTML + JSON 三种报告，148 个自动化测试（含 Agent 循环 / 技能 / MCP / 真实演示靶场的离线测试），Docker 化靶场，一键启动脚本，中文文档。
+- **靶场部署中心（全平台 · 国内镜像）**：顶部「靶场部署」页内置 16 个常见公开靶场（Juice Shop / WebGoat / Mutillidae / bWAPP / Pikachu / Upload-Labs / DVGA / VAmPI / Metasploitable2 / Redis 未授权等），一键 Docker 部署、实时日志、自动端口分配、自动复用本机已有容器，也可以在对话里直接说「部署 Juice Shop」让 Agent 安装。**Windows / macOS（Intel 与 Apple Silicon）/ Linux（x86_64 与 ARM64）全平台适配**；Docker Hub 镜像优先通过 `docker.1ms.run`、`docker.1panel.live`、`docker.m.daocloud.io` 等**国内镜像源**拉取，成功后自动打回官方镜像名，全部失败再回退官方源；ARM 主机自动为 amd64 镜像追加 `--platform linux/amd64` 模拟。
+- **工程化**：`HttpClient` 统一会话/证据/限速/重试，`Finding/LabRun` 数据模型，SQLite 资产/漏洞台账，Markdown + HTML + JSON 三种报告，166 个测试用例（163 个自动化 + 3 个 live，覆盖 Agent 循环 / 技能 / MCP / 真实演示靶场 / 跨平台 Docker 部署），Docker 化靶场，一键启动脚本，中文文档。
 
 ## 2. 靶场支持矩阵
 
@@ -102,7 +102,7 @@
 | 依赖 | 说明 |
 |---|---|
 | Python ≥ 3.10 | 已在 Python 3.14 上验证 |
-| Docker Desktop | 需要能运行 `linux/amd64` 容器（macOS Apple Silicon 会自动使用 Rosetta 模拟，已在 M4 上验证） |
+| Docker | Windows / macOS 用 Docker Desktop（Windows 需 WSL 2），Linux 用 Docker Engine；支持 x86_64 与 ARM64。ARM 主机上仅提供 `linux/amd64` 的镜像会自动追加 `--platform` 模拟（macOS Apple Silicon 已在 M4 上验证） |
 | 网络 | 首次运行需要 clone 靶场源码、拉取/构建镜像（脚本已适配国内镜像源） |
 | 可选：Playwright + Chrome | 用于 DOM XSS/CSP 的真实浏览器执行验证（`pip install playwright`，复用本机 Chrome，无需下载浏览器；缺失时自动降级为 HTTP 层验证） |
 | 可选：Node.js ≥ 18 + npm | 仅当需要重新构建 Web 前端时使用；仓库已附带构建产物 `web/dist/`，直接运行 `python -m pentest_agent web` 无需 Node |
@@ -502,6 +502,9 @@ npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent
 顶部「靶场部署」页把常见公开靶场做成了一个应用市场：点击卡片上的「一键部署」，平台自动完成 `docker pull` → `docker run` → 等待就绪，全程日志实时回传；部署完成后可以直接打开地址，或在工作台新建项目交给 Agent 扫描。
 
 - **内置 16 个常见靶场**：DVWA、SQLi-Labs（项目自带 compose 栈）、OWASP Juice Shop、WebGoat、Mutillidae II、bWAPP、Pikachu、Upload-Labs、PyGoat、DVGA（GraphQL）、VAmPI（API）、Metasploitable 2，以及 MongoDB / Redis / Memcached / Elasticsearch 未授权访问练习环境；
+- **全平台适配**：Windows（Docker Desktop + WSL 2）、macOS（Intel / Apple Silicon）、Linux（x86_64 / ARM64）统一使用 Docker CLI；Windows 下自动隐藏子进程控制台窗口并用 UTF-8 解码日志，避免乱码；`docker compose` v2 缺失时自动回退 `docker-compose`；
+- **国内镜像加速**：Docker Hub 镜像优先通过 `docker.1ms.run`、`docker.1panel.live`、`docker.m.daocloud.io`、`dockerpull.org` 等前缀镜像拉取，成功后本地 `docker tag` 回官方镜像名（不影响容器名与状态识别），全部失败才回退 Docker Hub；可用 `PENTEST_DOCKER_MIRRORS="源1,源2"` 自定义，或 `PENTEST_DOCKER_NO_MIRROR=1` 关闭；`labs up` 的 SQLi-Labs / MariaDB 基础镜像同样走该策略；
+- **架构模拟自动化**：镜像声明的架构与本机不一致时（如 Apple Silicon 上的 `linux/amd64` 靶场）自动追加 `--platform`，同架构主机不额外传参；部署日志会明确写出「运行平台 / 镜像源 / 是否模拟」；
 - **状态自动识别**：自动发现本机已有容器（例如历史部署的 `pentest-lab-*`），显示「运行中 / 已停止 / 未部署」与 HTTP 健康检查结果，不会重复拉起；
 - **端口安全**：容器只监听 `127.0.0.1`（不暴露局域网）；默认端口被占用时自动顺延，部署记录写入 `web_data/labs_deploy.json`，重启后 URL 保持稳定；
 - **可运维**：一键启动 / 停止 / 删除；可展开查看部署任务日志与 `docker logs` 容器输出；Apple Silicon 上自动为仅 amd64 的镜像追加 `--platform linux/amd64`（Rosetta 模拟）；
@@ -823,6 +826,7 @@ python项目课/
 ├── pentest_agent/                 # Agent 主包
 │   ├── cli.py                     # 命令行入口（labs/solve/verify/recon）
 │   ├── core/
+│   │   ├── docker_platform.py     # 跨平台 Docker：平台识别/国内镜像/架构模拟
 │   │   ├── http.py                # HttpClient：会话、CSRF、证据、限速、重试
 │   │   ├── models.py              # Finding / LabRun / Status 数据模型
 │   │   ├── scope.py               # 作用域守卫（默认仅本地/内网）
@@ -910,14 +914,14 @@ python -m pentest_agent verify
 | `verify` 全量耗时 | 实测 **1.5–2.5 分钟**（DVWA + SQLi-Labs，含浏览器验证；冷/热缓存不同） |
 | 浏览器验证 | Playwright + 本机 Chrome 无头模式，实际捕获 `alert` 弹窗；未安装时自动降级为 HTTP 层证据 |
 | 报告产物 | `reports/pentest_report.md`（人读）、`reports/pentest_results.json`（机读） |
-| 单元测试 | `python -m pytest tests/ -q`，**145 passed / 3 live deselected**（核心模型、SQLi 目录、Web API、通用扫描、进阶扫描、平台数据、AI 教学模式、LLM Agent 循环、技能 / MCP 扩展系统、**真实演示靶场 / MCP 工具**等 148 个用例） |
+| 单元测试 | `python -m pytest tests/ -q`，**163 passed / 3 live deselected**（核心模型、SQLi 目录、Web API、通用扫描、进阶扫描、平台数据、AI 教学模式、LLM Agent 循环、技能 / MCP 扩展系统、**真实演示靶场 / MCP 工具 / 跨平台 Docker** 等 166 个用例） |
 | 集成验收 | `python -m pytest tests/test_live.py -m live -v`（需靶场运行，跑完整 76+69 关，实测 3 passed / 2m23s） |
 | Web 对话工作台 | 左侧项目/会话 + 右侧对话、自然语言指令、实时任务卡片、矩阵证据、报告预览均实测通过（Playwright 截图验证），见 `docs/screenshots/` |
 | 扩展系统（技能 / MCP） | 技能：ZIP 上传（含路径穿越拦截）/ 本地目录安装 / 启停 / 预览实测通过，内置 3 个技能；MCP：内置安全工具 Server（7 个真实工具）与本地 HTTP MCP 均连接成功，真实 DeepSeek 对话中成功调用 `list_skills` / `use_skill` / MCP 工具 |
 | Agent 对话（Codex 式） | 真实 DeepSeek API 实测：流式思考 + function calling 依次调用 `update_plan` → `get_status` → `run_dvwa` → `get_results`，约 3s 完成「检查状态 → 跑 DVWA low 的 SQL 注入 → 总结」多步任务；停止 / 取消 / 教学模式分层提示均验证通过 |
 | 内置演示靶场（真实性） | 真实漏洞实测：SQLi 触发 SQLite 报错并查出真实用户、命令注入由 shell 计算回显标记、LFI 真实读取 `/etc/passwd`、SSTI 真实求值 `{{6*7}}=42`、SSRF 触发本地 canary、JWT alg=none 伪造 admin 成功；全量扫描稳定 **20 条风险（严重 4/高危 7/中危 5/低危 2/信息 2）** |
 | 通用 Web 渗透 | 对内置演示靶场实测发现 **20 条风险（严重 4/高危 7/中危 5/低危 2/信息 2）**：SQLi/SSTI/SSRF/命令注入/LFI/XSS/敏感文件/JS 密钥/JWT alg=none/GraphQL/CSRF/Host 头等 |
-| 平台数据闭环 | 扫描后自动写入 SQLite：实测 20 条漏洞、12 项资产、扫描历史 1 条；仪表盘统计、漏洞状态流转、资产筛选均在浏览器中验证通过 |
+| 平台数据闭环 | 扫描后自动写入 SQLite：实测累计 23 条漏洞、21 项资产、扫描历史 10 条（多次真实扫描按“标题+目标+CWE”去重）；仪表盘统计、漏洞状态流转、资产筛选均在浏览器中验证通过 |
 | 验证时间 | 2026-10-20（Agent 对话 / 扩展 / 真实演示靶场与 MCP）/ 2026-10-18（DVWA 与 SQLi-Labs），macOS 27.0.1 (Apple M4) + Docker Desktop 29.6.2 |
 
 **验收命令（从零开始）**：
@@ -952,6 +956,19 @@ docker build -f labs/docker/DVWA.Dockerfile -t pentest-agent/dvwa:local \
 
 **Q3：端口 4280/8085 被占用？**
 修改 `labs/docker-compose.yml` 中的 `ports` 映射，并给 `labs up` / `solve` 传入对应地址（`--target` / `--dvwa-url` / `--sqli-url`）。
+
+**Q3.1：拉取靶场镜像很慢 / 卡在 `docker pull`？**
+项目内置国内镜像优先策略：部署中心与 `labs up` 会依次尝试 `docker.1ms.run`、`docker.1panel.live`、`docker.m.daocloud.io` 等前缀镜像，成功后自动打回官方镜像名；全部失败才回退 Docker Hub。也可以自定义或关闭：
+
+```bash
+export PENTEST_DOCKER_MIRRORS="docker.1ms.run,docker.m.daocloud.io"   # 自定义镜像源
+export PENTEST_DOCKER_NO_MIRROR=1                                      # 关闭前缀镜像，直连官方源
+```
+
+如需 Docker 全局加速，可在 Docker Desktop → Settings → Docker Engine 中配置 `registry-mirrors`（对 `docker pull` 全局生效），两种方式可叠加使用。
+
+**Q3.2：Windows / Linux 上能部署靶场吗？**
+可以，部署中心已做全平台适配：Windows 需 Docker Desktop 并启用 WSL 2 后端；Linux 需 Docker Engine 且当前用户在 `docker` 组；macOS 支持 Intel 与 Apple Silicon。ARM 主机上仅提供 amd64 的镜像会自动追加 `--platform linux/amd64` 模拟运行（首次启动较慢）。若 Docker 未启动，页面会按当前平台给出对应提示。
 
 **Q4：DVWA 的 Insecure CAPTCHA 模块没有 reCAPTCHA Key？**
 默认配置下 reCAPTCHA Key 为空，页面会提示 “Please register for a key”。Agent 通过**密码是否真正被修改**的副作用来验证绕过是否成功（`csrf/test_credentials.php`），不依赖页面提示，因此不受影响。
