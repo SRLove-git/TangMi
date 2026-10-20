@@ -397,7 +397,15 @@ export default function DeployView({ onUseAsProject }: Props) {
       <PageHeader
         eyebrow="Lab Deployment"
         title="靶场部署"
-        subtitle={`常见公开靶场一键安装：自动拉取镜像、启动容器、等待就绪。已运行 ${running} / ${total} 个。`}
+        subtitle={`常见公开靶场一键安装：自动拉取镜像、启动容器、等待就绪。已运行 ${running} / ${total} 个。${
+          catalog
+            ? `运行平台 ${catalog.docker.platform_label || catalog.docker.platform}${
+                catalog.docker.mirror_enabled
+                  ? ` · 国内镜像 ${catalog.docker.mirrors?.length || 0} 个源`
+                  : " · 未启用国内镜像"
+              }`
+            : ""
+        }`}
         actions={
           <button className="btn" onClick={() => void refresh()} disabled={loading}>
             <RefreshCw size={14} className={loading ? "spin" : ""} />
@@ -405,6 +413,13 @@ export default function DeployView({ onUseAsProject }: Props) {
           </button>
         }
       />
+
+      {catalog?.docker.mirror_enabled && (catalog.docker.mirrors?.length || 0) > 0 && (
+        <div className="deploy-hint deploy-mirror-hint">
+          国内镜像加速：优先使用 {catalog.docker.mirrors?.join("、")}，失败自动回退官方源
+          {catalog.docker.emulation ? "；当前为 ARM 主机，amd64 镜像自动启用架构模拟" : ""}
+        </div>
+      )}
 
       {disk?.available && (
         <div className="deploy-disk">
@@ -430,7 +445,7 @@ export default function DeployView({ onUseAsProject }: Props) {
 
       {catalog && !catalog.docker.available && (
         <div className="alert error">
-          Docker 未就绪：{catalog.docker.version}。请先启动 Docker Desktop，再刷新本页。
+          Docker 未就绪：{catalog.docker.hint || catalog.docker.version}
         </div>
       )}
       {error && <div className="alert error">{error}</div>}

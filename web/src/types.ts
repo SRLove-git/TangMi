@@ -455,6 +455,8 @@ export interface DeployLab {
   description: string;
   tags: string[];
   image: string;
+  platform: string;
+  mirror: boolean;
   builtin: boolean;
   heavy: boolean;
   credentials: string;
@@ -470,8 +472,19 @@ export interface DeployCatalog {
   docker: {
     available: boolean;
     version: string;
+    /** 运行平台，如 "macOS · Apple Silicon" */
     platform: string;
     arch: string;
+    system?: string;
+    platform_label?: string;
+    /** 是否处于跨架构模拟（如 Apple Silicon 运行 amd64 镜像） */
+    emulation?: boolean;
+    /** 已启用的国内镜像源 */
+    mirrors?: string[];
+    mirror_enabled?: boolean;
+    mirror_label?: string;
+    /** Docker 不可用时的平台化提示 */
+    hint?: string;
   };
   categories: Array<{ key: string; label: string }>;
   labs: DeployLab[];

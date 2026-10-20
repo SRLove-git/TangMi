@@ -1,4 +1,5 @@
 import {
+  ArrowUpRight,
   FileText,
   FlaskConical,
   Folder,
@@ -6,6 +7,7 @@ import {
   MessageSquare,
   Plus,
   Shield,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -143,18 +145,38 @@ export default function Sidebar({
       </div>
 
       <div className="side-footer">
-        <div className="side-status">
-          <span className={`mini-dot ${system?.lab_http.dvwa ? "up" : "down"}`} /> DVWA
-          <span className={`mini-dot ${system?.lab_http.sqli_labs ? "up" : "down"}`} /> SQLi-Labs
-        </div>
-        <div className="side-actions">
-          <button className="link-btn" onClick={onOpenReport}>
-            <FileText size={12} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-            查看报告
-          </button>
+        <div className="side-status-head">
+          <span className="side-status-title">靶场状态</span>
           <span className="side-version">v{system?.version ?? "1.0.0"}</span>
         </div>
-        <div className="side-disclaimer">仅限本地授权靶场 · 作用域守卫已启用</div>
+
+        <div className="side-status-list">
+          {[
+            { name: "DVWA", up: system?.lab_http.dvwa },
+            { name: "SQLi-Labs", up: system?.lab_http.sqli_labs },
+          ].map((lab) => {
+            const state = system === null ? "pending" : lab.up ? "up" : "down";
+            const label = state === "pending" ? "检测中" : state === "up" ? "在线" : "离线";
+            return (
+              <div className={`side-status-row ${state}`} key={lab.name}>
+                <span className="side-status-dot" />
+                <span className="side-status-name">{lab.name}</span>
+                <span className="side-status-value">{label}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <button className="side-report-btn" onClick={onOpenReport}>
+          <FileText size={13} />
+          <span>查看报告</span>
+          <ArrowUpRight className="side-report-arrow" size={13} />
+        </button>
+
+        <div className="side-disclaimer">
+          <ShieldCheck size={11} />
+          <span>仅限本地授权靶场 · 作用域守卫已启用</span>
+        </div>
       </div>
     </aside>
   );

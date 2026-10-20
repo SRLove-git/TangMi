@@ -74,6 +74,16 @@ class FakeDocker(DockerCLI):
         on_line(f"pulling {image}")
         self.image_set.add(image)
 
+    def tag(self, source, target):  # noqa: D102
+        self.image_set.add(target)
+
+    def pull_with_mirror(self, image, on_line, platform_tag=None):  # noqa: D102
+        # 测试中直接模拟「国内镜像成功并打回官方名」的结果
+        self.pulled.append((image, platform_tag))
+        on_line(f"mirror pull {image}")
+        self.image_set.add(image)
+        return image
+
     def run(self, *, image, name, host_port, container_port, platform_tag=None, env=None, command=None):  # noqa: D102
         self.runs.append(
             {
