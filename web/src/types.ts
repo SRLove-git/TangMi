@@ -156,6 +156,8 @@ export interface SystemInfo {
   runs: number;
   /** AI 教学模式（导师）是否已配置 LLM */
   llm_configured?: boolean;
+  /** 当前使用的模型名（未配置时为空） */
+  llm_model?: string;
 }
 
 export interface LabStatus {
@@ -182,7 +184,7 @@ export interface LatestResult {
 
 
 /* ------------------------------------------------------------- 对话工作区 */
-/** agent = 执行模式（规则引擎跑靶场/扫描）；tutor = 教学模式（LLM 导师答疑） */
+/** agent = 执行模式（LLM Agent 调工具跑靶场/扫描，未配置模型时回退规则引擎）；tutor = 教学模式（LLM 导师答疑） */
 export type ChatMode = "agent" | "tutor";
 
 export interface ConversationMeta {
@@ -230,8 +232,37 @@ export interface ChatMessage {
     /** 部署/扫描等附加信息 */
     url?: string;
     task_id?: string;
+    /** 大模型思考过程（reasoning_content 流式累积） */
+    reasoning?: string;
+    /** 本轮 Agent 调用过的工具（按执行顺序） */
+    tools?: ToolCallView[];
+    /** update_plan 工具产出的执行计划 */
+    plan?: PlanState;
+    /** 该条助手消息是否仍在流式生成 */
+    streaming?: boolean;
+    /** 用户主动停止生成 */
+    stopped?: boolean;
     [key: string]: unknown;
   };
+}
+
+/** Agent 工具调用卡片 */
+export interface ToolCallView {
+  id: string;
+  name: string;
+  label?: string;
+  args?: Record<string, unknown>;
+  status: "running" | "done" | "error";
+  output?: string;
+  elapsed_ms?: number;
+  run_id?: string;
+  actions?: string[];
+  started_at?: string;
+}
+
+/** Agent 执行计划（update_plan 工具） */
+export interface PlanState {
+  steps: { text: string; status: "pending" | "running" | "completed" }[];
 }
 
 export interface ConversationState {
@@ -250,7 +281,15 @@ export interface ConversationState {
 export interface ChatEvent {
   seq: number;
   ts: string;
-  type: "message" | "delta" | "run" | "run_log" | "turn" | "done" | "end";
+  type:
+    | "message"
+    | "delta"
+    | "reasoning"
+    | "run"
+    | "run_log"
+    | "turn"
+    | "done"
+    | "end";
   payload: Record<string, unknown>;
 }
 

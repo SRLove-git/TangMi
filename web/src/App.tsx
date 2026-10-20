@@ -180,6 +180,42 @@ export default function App() {
           ),
         };
       });
+    } else if (event.type === "reasoning") {
+      const payload = event.payload as { message_id: string; text: string };
+      setConversation((prev) => {
+        if (!prev) return prev;
+        const index = prev.messages.findIndex((item) => item.id === payload.message_id);
+        if (index < 0) {
+          return {
+            ...prev,
+            messages: [
+              ...prev.messages,
+              {
+                id: payload.message_id,
+                role: "assistant",
+                content: "",
+                kind: "text",
+                created_at: new Date().toISOString(),
+                data: { mode: "agent", streaming: true, reasoning: payload.text },
+              },
+            ],
+          };
+        }
+        return {
+          ...prev,
+          messages: prev.messages.map((item, itemIndex) =>
+            itemIndex === index
+              ? {
+                  ...item,
+                  data: {
+                    ...item.data,
+                    reasoning: `${item.data.reasoning ?? ""}${payload.text}`,
+                  },
+                }
+              : item,
+          ),
+        };
+      });
     } else if (event.type === "run") {
       const payload = event.payload as Record<string, unknown>;
       const runId = String(payload.run_id ?? "");
@@ -225,8 +261,10 @@ export default function App() {
     } else if (event.type === "turn") {
       const busy = Boolean((event.payload as { busy?: boolean }).busy);
       setConversation((prev) => (prev ? { ...prev, busy } : prev));
+      // 同步左侧会话列表的「运行中」状态
+      void refreshProjects();
     }
-  }, []);
+  }, [refreshProjects]);
 
   const closeStream = useCallback(() => {
     closeStreamRef.current?.();

@@ -13,13 +13,13 @@ interface Props {
 }
 
 const PLACEHOLDER: Record<ChatMode, string> = {
-  agent: "用自然语言指挥智能体，例如：跑一下 DVWA 的 low 难度，只测 SQL 注入和文件上传",
-  tutor: "遇到不会的直接问，例如：Less-5 我判断不出闭合方式，先给我提示，不要直接给答案",
+  agent: "直接说目标，Agent 会思考并调用工具，例如：先检查靶场状态，再跑一轮 DVWA low 难度",
+  tutor: "直接提问，导师会先读取当前关卡再回答，例如：Less-5 我判断不出闭合方式，先给我提示",
 };
 
 const BUSY_PLACEHOLDER: Record<ChatMode, string> = {
-  agent: "任务执行中，可等待完成或点击右上角「停止」…",
-  tutor: "导师正在回答，可等待完成或点击右上角「停止」…",
+  agent: "Agent 正在思考 / 调用工具，可点击右上角「停止」中断…",
+  tutor: "导师正在读取关卡 / 思考，可点击右上角「停止」中断…",
 };
 
 export default function Composer({
@@ -64,7 +64,7 @@ export default function Composer({
             aria-selected={mode === "agent"}
             className={`mode-option ${mode === "agent" ? "active" : ""}`}
             onClick={() => onModeChange("agent")}
-            title="执行模式：自动跑 DVWA / SQLi-Labs、扫描目标、出报告"
+            title="执行模式：像 Codex 一样用自然语言指挥 Agent 调用扫描 / 靶场 / 报告工具"
           >
             <Wrench size={12} />
             执行模式
@@ -75,7 +75,7 @@ export default function Composer({
             aria-selected={mode === "tutor"}
             className={`mode-option ${mode === "tutor" ? "active" : ""}`}
             onClick={() => onModeChange("tutor")}
-            title="教学模式：像助教一样讲思路、给提示、分析报错"
+            title="教学模式：AI 导师先读取真实关卡上下文，再讲思路、给分层提示"
           >
             <GraduationCap size={12} />
             教学模式
@@ -116,7 +116,7 @@ export default function Composer({
       <div className="composer-hint">
         {mode === "tutor"
           ? "教学模式：默认只讲思路不剧透，明确说「直接给答案」才会给完整解法 · Enter 发送"
-          : "Enter 发送 · Shift + Enter 换行 · 仅限本地授权靶场"}
+          : "Enter 发送 · Shift + Enter 换行 · Agent 会自动调用工具 · 仅限本地授权靶场"}
       </div>
     </div>
   );

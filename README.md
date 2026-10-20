@@ -38,11 +38,12 @@
 - **智能体特性**：目标指纹自动识别、按 `security` Cookie 自动切换难度、依赖状态的多步骤利用编排（先登录/先注册/先上传再包含）、失败自动重试与降级策略、每关独立隔离（单关失败不影响全局）。
 - **产品化安全管理平台**：扫描结果自动沉淀为**资产台账**与**漏洞库**（SQLite 持久化），支持漏洞生命周期（待确认/已确认/误报/已修复/风险接受）、去重、备注、风险统计、OWASP 分布、扫描历史与 6 种内置扫描策略；界面把安全态势 / 资产 / 漏洞 / 扫描合并为「记录」页四个 Tab。
 - **TypeScript 对话式工作台**：参考 Codex / Claude Desktop 的「左侧项目 + 右侧对话」布局，视觉设计参考 **TREK** 的设计语言（浅色极简、近黑主色、悬浮玻璃顶栏、大圆角卡片、Poppins/Geist 字体、light/dark 双主题）；React + TypeScript + Flask(SSE) 实现，支持自然语言指挥 Agent 执行扫描与靶场操作，实时展示任务卡片、矩阵证据与报告，开箱即用。
-- **AI 教学模式（靶场导师）**：输入框可在「执行模式 / 教学模式」间切换；教学模式接入 OpenAI 兼容 LLM（DeepSeek / OpenAI / 本地 Ollama 均可），把问题连同当前靶场上下文交给模型，以助教方式给思路、分层提示和原理解析（默认不剧透，明确要求才给完整解法），支持流式回复与随时停止，卡住时直接问 AI 即可。
+- **Codex / Claude 式 Agent 对话**：执行模式接入 OpenAI 兼容大模型后走真正的 Agent 循环 —— 流式思考过程（reasoning）、function calling 调用 14 个本地工具、多步工具编排、执行计划清单、工具调用卡片与耗时、随时停止；没有配置模型时自动回退规则引擎，离线也能用。
+- **AI 教学模式（靶场导师）**：输入框可在「执行模式 / 教学模式」间切换；教学模式接入 OpenAI 兼容 LLM（DeepSeek / OpenAI / 本地 Ollama 均可），把问题连同当前靶场上下文交给模型，以助教方式给思路、分层提示和原理解析（默认不剧透，明确要求才给完整解法），与执行模式共用同一套「思考过程 + 工具卡片 + 流式回复 + 停止」对话 UI，卡住时直接问 AI 即可。
 - **完整学习闭环**：顶部「学习」页把 DVWA 76 关 + SQLi-Labs 69 关做成进度矩阵 —— 标记在学/已掌握/待复习、写错题笔记、看四难度源码 diff、**19+13 张知识卡片**；**AI 出题 + 判题**（≥80 分自动标记已掌握、逐题点评）、**间隔复习**（3/7/14/30 天到期提醒 + 连续学习天数）、**一键导出 Markdown 学习报告**（可选 AI 教练建议）；聊天里的「提示①②③ / 给答案 / 我懂了」按钮会把提示层级与掌握状态自动写入学习档案；⌘K 全局命令面板可搜页面 / 关卡 / 靶场。
 - **请求重放器**：内置简化版 Repeater，手工改 method / URL / headers / body 重放请求，实时查看原始响应、响应头与沙箱渲染结果，学 SQLi / XSS / 越权时最直接的验证工具。
 - **靶场部署中心**：顶部「靶场部署」页内置 16 个常见公开靶场（Juice Shop / WebGoat / Mutillidae / bWAPP / Pikachu / Upload-Labs / DVGA / VAmPI / Metasploitable2 / Redis 未授权等），一键 Docker 部署、实时日志、自动端口分配、自动复用本机已有容器，也可以在对话里直接说「部署 Juice Shop」让 Agent 安装。
-- **工程化**：`HttpClient` 统一会话/证据/限速/重试，`Finding/LabRun` 数据模型，SQLite 资产/漏洞台账，Markdown + HTML + JSON 三种报告，102 个自动化测试，Docker 化靶场，一键启动脚本，中文文档。
+- **工程化**：`HttpClient` 统一会话/证据/限速/重试，`Finding/LabRun` 数据模型，SQLite 资产/漏洞台账，Markdown + HTML + JSON 三种报告，118 个自动化测试（含 5 个离线 Agent 循环测试），Docker 化靶场，一键启动脚本，中文文档。
 
 ## 2. 靶场支持矩阵
 
@@ -165,7 +166,7 @@ python -m pentest_agent web
 # 自动打开浏览器：http://127.0.0.1:8777
 ```
 
-界面采用「左侧项目 + 右侧对话」布局：左侧管理项目和会话，右侧直接和 Agent 对话下指令，执行过程以任务卡片实时回显，结果可打开矩阵与报告查看。输入框上方可在「执行模式 / 教学模式」间切换：执行模式自动跑靶场与扫描，教学模式在卡住时当 AI 导师答疑（需先在「设置 → AI 教学模型」配置 LLM）。详见 [5. Web 图形界面（TypeScript · 对话式工作台）](#5-web-图形界面typescript--对话式工作台)。
+界面采用「左侧项目 + 右侧对话」布局：左侧管理项目和会话，右侧直接和 Agent 对话下指令，执行过程以「思考过程 + 工具调用卡片 + 任务卡片」实时回显，结果可打开矩阵与报告查看。输入框上方可在「执行模式 / 教学模式」间切换：执行模式像 Codex 一样由大模型自主调用扫描 / 靶场 / 报告工具完成多步任务（需先在「设置 → AI 教学模型」配置 LLM），教学模式在卡住时当 AI 导师答疑。详见 [5. Web 图形界面（TypeScript · 对话式工作台）](#5-web-图形界面typescript--对话式工作台)。
 
 ### 3.6 扫描任意授权目标（通用渗透）
 
@@ -300,9 +301,33 @@ python -m pentest_agent web --port 9000 --no-browser   # 自定义端口 / 不�
 | `结果怎么样` / `看看矩阵` / `打开报告` | 查看结果与报告 |
 | `/help` `/status` `/dvwa` `/sqli` `/verify` `/report` `/reset` | 斜杠快捷指令 |
 
-Agent 支持识别中英文、模块中文名、难度（low/medium/high/impossible、低/中/高/不可能）、关卡范围（`1-10`、`25a`、`46-53`）以及目标地址；无法识别时会返回使用帮助。
+Agent 支持识别中英文、模块中文名、难度（low/medium/high/impossible、低/中/高/不可能）、关卡范围（`1-10`、`25a`、`46-53`）以及目标地址。**配置大模型后**这些指令由模型理解并转成 function calling（支持任意自然语言表述，见 [5.3](#53-codex--claude-式-agent-对话执行模式--大模型驱动)）；**未配置时**退回规则关键词引擎，无法识别会返回使用帮助。
 
-### 5.3 AI 教学模式（靶场导师）
+### 5.3 Codex / Claude 式 Agent 对话（执行模式 · 大模型驱动）
+
+配置好 AI 模型后，执行模式不再返回固定话术，而是像 Codex / Claude Code / DSH 一样完成
+**思考 → 调工具 → 观察结果 → 继续下一步 → 总结** 的完整 Agent 循环：
+
+![Agent 流式思考与工具调用](docs/screenshots/agent_chat_streaming.png)
+
+- **流式思考 + 流式正文**：消息气泡内先出现可折叠的「思考过程」（模型 `reasoning_content` 流式累积，回答结束后自动收起），正文逐字渲染，底部实时显示「正在输出 / 思考中 · Ns」；
+- **工具调用卡片**：模型每次 function call 都渲染成一张卡片 —— 工具中文名、参数摘要、运行中 / 完成 / 失败、耗时，可展开查看完整输出；扫描类工具还附「查看发现 / 查看矩阵 / 打开报告」按钮，工具执行期间的实时进度仍以任务卡片回显；
+- **执行计划清单**：多步任务先调用 `update_plan`，对话里渲染成待办清单，回答完成后自动勾选；
+- **14 个本地工具**：`get_status` / `run_web_scan`（recon · quick · full，可筛模块）/ `run_dvwa`（难度 × 模块）/ `run_sqli_labs`（关卡列表）/ `verify_all` / `lab_control`（启动 · 停止 · 重置）/ `get_results` / `get_report` / `list_deployable_labs` / `deploy_lab` / `set_target` / `get_current_context` / `update_plan`，全部复用平台既有的作用域守卫、运行记录与报告生成逻辑；
+- **多步工具编排**：单轮回答最多 6 步，工具结果以 `role=tool` 回灌模型，由模型决定继续调工具还是给出结论（例如「先检查状态 → 再跑 DVWA low 的 SQL 注入 → 再读结果 → 总结」）；
+- **随时停止**：流式生成可立即中断；工具执行中停止会取消当前运行，且不再继续追问模型；
+- **离线兜底**：未配置模型时执行模式自动退回规则引擎；斜杠命令（`/help` `/status` `/dvwa` `/sqli` `/verify` `/report` `/reset`）始终走确定性快捷路径；
+- **会话可回放**：思考过程、工具卡片、计划清单都持久化在 `web_data/chat.json`，重新打开会话仍能看到完整执行轨迹。
+
+![执行完成后的工具轨迹与结论](docs/screenshots/agent_chat_final.png)
+
+点开任意工具卡片可以查看完整输出（思考过程、参数、输出、耗时都可回看）：
+
+![展开工具调用输出](docs/screenshots/agent_chat_tool_open.png)
+
+![深色模式下的 Agent 对话](docs/screenshots/agent_chat_dark.png)
+
+### 5.4 AI 教学模式（靶场导师）
 
 执行模式负责「自动跑靶场」，**教学模式**负责「卡住时答疑」。把输入框上方的开关切到「教学模式」，就可以像问实验课助教一样提问：
 
@@ -320,9 +345,12 @@ Agent 支持识别中英文、模块中文名、难度（low/medium/high/impossi
 - **自动带入靶场上下文**：当前项目是 DVWA 还是 SQLi-Labs、多少关、可选难度、靶场地址等会一并提供给模型，回答不会泛泛而谈；
 - **自动读取当前关卡**：学生提到某个 DVWA 模块 / SQLi-Labs 关卡（或在聊天头部点「读取关卡」选择）时，平台会真实登录靶场、抓取当前页面回显 + 关卡源码注入上下文，不需要手动复制粘贴；
 - **分层提示**：回复下方的「提示①②③ / 给答案 / 我懂了」由平台约束提示强度（方向 → 方法 → 关键结构 → 完整答案），并把看过的最高提示层级、导师对话次数、掌握状态自动记入学习档案；
-- **流式回复**：答案边生成边显示，可随时点「停止」中断；密钥只保存在本机，界面仅显示掩码。
+- **流式回复**：答案边生成边显示，可随时点「停止」中断；密钥只保存在本机，界面仅显示掩码；
+- **与执行模式统一体验**：同样有「思考过程」折叠块、工具调用卡片（`fetch_lab_context` 读取真实页面 / `get_knowledge_card` 读取知识卡 / `get_learning_progress` 读取进度）和模型徽章。
 
-![AI 教学模式](docs/screenshots/tutor_mode.png)
+![AI 教学模式](docs/screenshots/agent_tutor_chat.png)
+
+![旧版教学模式界面](docs/screenshots/tutor_mode.png)
 
 **一次性配置**：顶部「设置 → AI 教学模型」，填写 Base URL / 模型名称 / API Key，保存后点「测试连接」；也可以点 **「探测可用模型」** 自动查询该 Base URL 下的模型列表并一键填入（例如 DeepSeek 当前可用 `deepseek-flash` / `deepseek-v4-pro`）。支持任何 OpenAI Chat Completions 兼容服务：
 
@@ -347,26 +375,27 @@ export PENTEST_LLM_MODEL=deepseek-flash
 ![AI 教学模型配置与模型探测](docs/screenshots/settings_llm.png)
 
 
-### 5.4 技术实现
+### 5.5 技术实现
 
-- **前端**：`web/`，React 18 + TypeScript + Vite + marked；`src/components/chat/` 下为 Sidebar / ChatView / MessageItem / RunCard / Composer / 各类弹窗组件；
+- **前端**：`web/`，React 18 + TypeScript + Vite + marked；`src/components/chat/` 下为 Sidebar / ChatView / MessageItem / ToolCallCard / RunCard / Composer / 各类弹窗组件，Agent 对话样式在 `src/agent-ui.css`（思考折叠 / 工具卡 / 计划清单 / 流式光标 / 代码复制）；
 - **后端**：`pentest_agent/web/` 十个模块 + `pentest_agent/knowledge/` 知识卡片：
   - `server.py`：Flask REST API + SSE；
   - `runs.py`：扫描 / 靶场任务管理与历史；
   - `chat.py`：项目 / 会话 / 消息存储与事件流；
-  - `agent.py`：对话式 Agent（意图解析 + 工具编排，把自然语言变成真实扫描/靶场操作）；
-  - `tutor.py`：AI 教学模式（OpenAI 兼容 LLM 客户端、教学 Prompt、靶场上下文、配置读写）；
+  - `llm_agent.py`：**LLM Agent 循环**（流式 reasoning / function calling / 多步工具编排 / 思考与工具事件），执行模式与教学模式共用；
+  - `agent.py`：对话式 Agent 工具层（意图解析 + 扫描 / 靶场 / 报告 / 部署等工具实现，供 LLM Agent 循环调用）；
+  - `tutor.py`：AI 教学模型配置与教学 Prompt（OpenAI 兼容 LLM 客户端、靶场上下文、配置读写）；
   - `deploy.py`：靶场部署中心（靶场目录、Docker 拉取/运行/启停、端口分配、健康检查、状态复用）；
   - `learning.py`：学习进度 / 错题本存储（状态、提示层级、笔记、从历史解题结果回填）；
   - `lab_context.py`：关卡上下文采集（DVWA 登录 + 页面 + 源码、SQLi-Labs 关卡 + 源码、四难度源码 diff）；
   - `repeater.py`：请求重放器（作用域守卫 + 任意方法重放 + 响应截断）；
   - `quiz.py`：AI 出题 / 判题（知识卡片 + 源码上下文 → JSON 题目 / 逐题评分）；
   - `knowledge/`：19 张 DVWA 模块卡 + 13 组 SQLi-Labs 知识卡（原理 / CWE / OWASP / 关键思路 / 防御）；
-- **实时链路**：Agent 线程 → 会话事件流（`message` / `delta` / `run` / `run_log` / `turn`）→ `GET /api/conversations/{id}/stream`（SSE）→ 前端增量渲染；
+- **实时链路**：Agent 线程 → 会话事件流（`message` / `delta` / `reasoning` / `run` / `run_log` / `turn`）→ `GET /api/conversations/{id}/stream`（SSE）→ 前端增量渲染（思考折叠 / 工具卡片 / 流式光标）；
 - **数据持久化**：项目与会话保存在 `web_data/chat.json`，任务历史在 `web_runs/`，AI 教学模型配置在 `web_data/llm_settings.json`，靶场部署记录在 `web_data/labs_deploy.json`，学习进度 / 笔记 / 复习计划 / 出题成绩在 `web_data/learning.json`，学习报告写入 `reports/learning_report_*.md`；对话触发的扫描会自动生成 Markdown / JSON 报告到 `reports/`；
 - **安全**：默认只监听 `127.0.0.1`；新建项目与切换目标都会经过作用域守卫；Agent 回复与报告在渲染前转义原始 HTML，避免靶场回显被执行。
 
-### 5.5 前端开发模式
+### 5.6 前端开发模式
 
 ```bash
 cd web
@@ -375,18 +404,18 @@ npm run dev          # http://127.0.0.1:5173 ，/api 自动代理到 8777
 npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent web 托管
 ```
 
-### 5.6 主要 API
+### 5.7 主要 API
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/system` | 版本、靶场地址、HTTP 状态、AI 教学模型是否已配置 |
+| GET | `/api/system` | 版本、靶场地址、HTTP 状态、AI 模型配置状态与模型名 |
 | GET | `/api/projects` | 项目列表（含会话与靶场状态） |
 | POST | `/api/projects` | 新建项目 `{name,target}`（自动识别靶场类型） |
 | PATCH/DELETE | `/api/projects/{id}` | 更新 / 删除项目 |
 | POST | `/api/projects/{id}/detect` | 重新识别靶场类型 |
 | POST | `/api/projects/{id}/conversations` | 新建会话 |
-| GET/POST | `/api/conversations/{id}` / `.../messages` | 会话详情 / 发送用户消息（`{content, mode}`，`mode=agent` 执行、`tutor` 教学） |
-| GET | `/api/conversations/{id}/stream?after=N` | 会话 SSE 事件流（消息、工具进度、日志） |
+| GET/POST | `/api/conversations/{id}` / `.../messages` | 会话详情 / 发送用户消息（`{content, mode}`，`mode=agent` 执行 Agent、`tutor` 教学模式） |
+| GET | `/api/conversations/{id}/stream?after=N` | 会话 SSE 事件流：`message` / `delta`（正文增量）/ `reasoning`（思考增量）/ `run` / `run_log` / `turn` |
 | POST | `/api/conversations/{id}/cancel` | 取消当前任务（执行任务 / 教学模式流式生成） |
 | GET/PUT | `/api/settings/llm` | 读取 / 保存 AI 教学模型配置（密钥只返回掩码） |
 | POST | `/api/settings/llm/test` | 测试大模型连通性，返回延迟与模型回复 |
@@ -407,7 +436,7 @@ npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent
 | GET | `/api/reports` / `/api/reports/{name}` | 报告列表 / 报告内容 |
 | GET | `/api/results/latest` | 最新一次全量验证结果 JSON |
 
-### 5.7 视觉设计（参考 TREK）
+### 5.8 视觉设计（参考 TREK）
 
 界面视觉参考 [TREK](https://github.com/liketrek/TREK) 的设计系统，落地为可主题化的设计令牌（`web/src/styles.css`）：
 
@@ -423,7 +452,7 @@ npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent
 
 所有界面组件（顶栏、侧栏、对话、任务卡片、矩阵、发现列表、报告）都使用同一套令牌，因此新增页面无需额外适配即可自动跟随主题。
 
-### 5.8 靶场部署中心（一键安装常见靶场）
+### 5.9 靶场部署中心（一键安装常见靶场）
 
 顶部「靶场部署」页把常见公开靶场做成了一个应用市场：点击卡片上的「一键部署」，平台自动完成 `docker pull` → `docker run` → 等待就绪，全程日志实时回传；部署完成后可以直接打开地址，或在工作台新建项目交给 Agent 扫描。
 
@@ -436,7 +465,7 @@ npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent
 
 ![靶场部署](docs/screenshots/deploy.png)
 
-### 5.9 完整学习闭环（学 → 练 → 复习 → 报告）
+### 5.10 完整学习闭环（学 → 练 → 复习 → 报告）
 
 「学习」页把 145 个关卡（DVWA 76 + SQLi-Labs 69）做成了可追踪的学习档案，形成完整闭环：
 
@@ -756,7 +785,8 @@ python项目课/
 │   │   ├── security_db.py         # SQLite：资产台账 / 漏洞生命周期 / 扫描历史
 │   │   ├── policies.py            # 内置扫描策略（6 种）
 │   │   ├── chat.py                # 项目/会话/消息存储（含认证头/策略配置）
-│   │   └── agent.py               # 对话式 Agent：意图解析 + 工具编排
+│   │   ├── llm_agent.py           # LLM Agent 循环：流式思考 + function calling + 多步工具
+│   │   └── agent.py               # 对话式 Agent 工具层：工具实现（静默模式供 LLM 调用）
 │   ├── labs/
 │   │   ├── dvwa.py                # DVWA 19 模块 × 4 难度解题器
 │   │   └── sqli_labs.py           # SQLi-Labs 69 关解题器
@@ -770,7 +800,8 @@ python项目课/
 │   │   └── browser.py             # Playwright 无头浏览器验证（DOM XSS/CSP）
 │   └── knowledge/                 # 可扩展的题库/配置数据
 ├── web/                           # TypeScript 前端（React + Vite）
-│   ├── src/components/chat/       # 对话工作台组件（Sidebar/ChatView/...）
+│   ├── src/components/chat/       # 对话工作台组件（Sidebar/ChatView/MessageItem/ToolCallCard/...）
+│   ├── src/agent-ui.css           # Agent 对话样式（思考折叠/工具卡/计划清单/流式光标）
 │   ├── src/components/views/      # 平台工作区：态势/资产/漏洞/扫描/设置
 │   ├── src/                       # API 客户端、类型、样式
 │   ├── dist/                      # 构建产物（已附带，可直接使用）
@@ -823,12 +854,13 @@ python -m pentest_agent verify
 | `verify` 全量耗时 | 实测 **1.5–2.5 分钟**（DVWA + SQLi-Labs，含浏览器验证；冷/热缓存不同） |
 | 浏览器验证 | Playwright + 本机 Chrome 无头模式，实际捕获 `alert` 弹窗；未安装时自动降级为 HTTP 层证据 |
 | 报告产物 | `reports/pentest_report.md`（人读）、`reports/pentest_results.json`（机读） |
-| 单元测试 | `python -m pytest tests/ -q`，**45 passed**（核心模型 10 + SQLi 目录 4 + Web API 9 + 通用扫描 5 + 进阶扫描 12 + 平台数据 5） |
+| 单元测试 | `python -m pytest tests/ -q`，**115 passed / 3 live deselected**（核心模型、SQLi 目录、Web API、通用扫描、进阶扫描、平台数据、AI 教学模式、**LLM Agent 循环**等 118 个用例） |
 | 集成验收 | `python -m pytest tests/test_live.py -m live -v`（需靶场运行，跑完整 76+69 关，实测 3 passed / 2m23s） |
 | Web 对话工作台 | 左侧项目/会话 + 右侧对话、自然语言指令、实时任务卡片、矩阵证据、报告预览均实测通过（Playwright 截图验证），见 `docs/screenshots/` |
+| Agent 对话（Codex 式） | 真实 DeepSeek API 实测：流式思考 + function calling 依次调用 `update_plan` → `get_status` → `run_dvwa` → `get_results`，约 3s 完成「检查状态 → 跑 DVWA low 的 SQL 注入 → 总结」多步任务；停止 / 取消 / 教学模式分层提示均验证通过 |
 | 通用 Web 渗透 | 对本地演示目标实测发现 **20 条风险（严重 4/高危 7/中危 5/低危 2/信息 2）**：SQLi/SSTI/SSRF/命令注入/LFI/XSS/敏感文件/JS 密钥/JWT alg=none/GraphQL/CSRF/Host 头等 |
 | 平台数据闭环 | 扫描后自动写入 SQLite：实测 20 条漏洞、12 项资产、扫描历史 1 条；仪表盘统计、漏洞状态流转、资产筛选均在浏览器中验证通过 |
-| 验证时间 | 2026-10-18，macOS 27.0.1 (Apple M4) + Docker Desktop 29.6.2 |
+| 验证时间 | 2026-10-20（Agent 对话）/ 2026-10-18（靶场与扫描），macOS 27.0.1 (Apple M4) + Docker Desktop 29.6.2 |
 
 **验收命令（从零开始）**：
 
@@ -915,7 +947,7 @@ client = HttpClient("http://127.0.0.1:8080", delay=0.1)
 
 **扩展 Web 界面**：后端在 `pentest_agent/web/server.py` 增加 API，前端在 `web/src/components/chat/` 增加组件并 `cd web && npm run build` 重新构建；求解器实时进度通过 `solve(..., on_progress=...)` 回调接入。
 
-**扩展对话 Agent**：在 `pentest_agent/web/agent.py` 的 `_plan()` 中增加意图关键词与 `_dispatch()` 处理分支，即可让 Agent 支持新的自然语言操作；所有工具调用都复用 `run_manager` / `store`，无需改前端。
+**扩展对话 Agent**：在 `pentest_agent/web/llm_agent.py` 的 `_build_agent_tools()` 里新增一个 `ToolSpec`（JSON Schema + handler）即可让大模型自主调用新工具；handler 建议复用 `ChatAgent` 的工具方法（加 `quiet=True` 时只返回结构化结果、不刷屏消息）。规则引擎路径仍可在 `agent.py` 的 `_plan()` / `_dispatch()` 中扩展，作为未配置模型时的兜底；所有工具调用都复用 `run_manager` / `store`，无需改前端渲染。
 
 **接入自己的前端**：所有能力都通过 `/api` REST + SSE 暴露，可使用任意语言/框架重写界面。
 

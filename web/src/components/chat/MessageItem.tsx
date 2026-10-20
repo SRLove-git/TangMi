@@ -1,7 +1,17 @@
-import { GraduationCap, Sparkles } from "lucide-react";
-import type { ChatMessage, RunLive } from "../../types";
+import { useEffect, useRef, useState } from "react";
+import {
+  Brain,
+  ChevronRight,
+  Copy,
+  GraduationCap,
+  ListChecks,
+  Sparkles,
+  Wrench,
+} from "lucide-react";
+import type { ChatMessage, PlanState, RunLive } from "../../types";
 import { formatTime, renderMarkdown, statusMeta } from "../../utils";
 import RunCard from "./RunCard";
+import ToolCallCard from "./ToolCallCard";
 
 interface Props {
   message: ChatMessage;
@@ -26,6 +36,42 @@ export default function MessageItem({
   const summary = (message.data?.summary ?? null) as Record<string, unknown> | null;
   const runCard = message.data?.run_id ? runCards[message.data.run_id] : undefined;
   const isTutor = message.data?.mode === "tutor" || message.kind === "tutor";
+  const isError = message.kind === "error";
+  const reasoning = typeof message.data?.reasoning === "string" ? message.data.reasoning : "";
+  const tools = message.data?.tools ?? [];
+  const plan = (message.data?.plan as PlanState | undefined) ?? null;
+  const streaming = Boolean(message.data?.streaming);
+  const stopped = Boolean(message.data?.stopped);
+  const elapsed = useElapsedSeconds(streaming, message.created_at);
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimer.current) window.clearTimeout(copyTimer.current);
+    };
+  }, []);
+
+  function handleBubbleClick(event: React.MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    const button = target.closest(".code-copy") as HTMLElement | null;
+    if (!button) return;
+    const pre = button.closest("pre");
+    const code = pre?.querySelector("code");
+    const text = code?.textContent ?? pre?.textContent ?? "";
+    void copyToClipboard(text);
+    button.textContent = "已复制";
+    window.setTimeout(() => {
+      button.textContent = "复制";
+    }, 1400);
+  }
+
+  async function handleCopyMessage() {
+    await copyToClipboard(message.content ?? "");
+    setCopied(true);
+    if (copyTimer.current) window.clearTimeout(copyTimer.current);
+    copyTimer.current = window.setTimeout(() => setCopied(false), 1600);
+  }
 
   if (isUser) {
     return (
@@ -43,29 +89,118 @@ export default function MessageItem({
     );
   }
 
+  const hasTool = tools.length > 0;
+  const showThinking =
+    streaming && !message.content.trim() && !hasTool && !reasoning.trim();
+
   return (
     <div className="chat-row assistant">
       <div className={`avatar agent-avatar ${isTutor ? "tutor-avatar" : ""}`}>
         {isTutor ? <GraduationCap size={15} /> : <Sparkles size={15} />}
       </div>
       <div
-        className={`bubble agent-bubble ${message.kind === "error" ? "error" : ""} ${
-          isTutor && message.kind !== "error" ? "tutor-bubble" : ""
-        }`}
+        className={`bubble agent-bubble ${isError ? "error" : ""} ${
+          isTutor && !isError ? "tutor-bubble" : ""
+        } ${streaming ? "streaming" : ""}`}
+        onClick={handleBubbleClick}
       >
-        {isTutor && message.kind !== "error" && (
-          <span className="mode-tag tutor-tag">
-            <GraduationCap size={11} /> 靶场导师
-            {message.data?.item_key ? ` · ${itemLabel(String(message.data.item_key))}` : ""}
-            {message.data?.hint_level ? ` · 提示L${message.data.hint_level}` : ""}
-            {message.data?.model ? ` · ${String(message.data.model)}` : ""}
+        {!isError && (
+          <span className="agent-meta-line">
+            <span className={`mode-tag ${isTutor ? "tutor-tag" : "agent-tag"}`}>
+              {isTutor ? (
+                <>
+                  <GraduationCap size={11} /> 靶场导师
+                </>
+              ) : (
+                <>
+                  <Wrench size={11} /> 执行 Agent
+                </>
+              )}
+            </span>
+            {message.data?.model && (
+              <span className="model-chip mono">{String(message.data.model)}</span>
+            )}
+            {isTutor && message.data?.item_key && (
+              <span className="meta-chip">{itemLabel(String(message.data.item_key))}</span>
+            )}
+            {isTutor && message.data?.hint_level ? (
+              <span className="meta-chip">提示 L{String(message.data.hint_level)}</span>
+            ) : null}
+            {stopped && <span className="meta-chip stopped">已停止</span>}
           </span>
         )}
-        <div
-          className="bubble-markdown markdown-body"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
-        />
+
+        {!isError && reasoning.trim() && (
+          <ReasoningBlock text={reasoning} streaming={streaming} />
+        )}
+
+        {!isError && plan && plan.steps.length > 0 && (
+          <PlanCard plan={plan} streaming={streaming} />
+        )}
+
+        {!isError && hasTool && (
+          <div className="tool-call-list">
+            {tools.map((tool) => (
+              <ToolCallCard
+                key={tool.id}
+                tool={tool}
+                live={streaming}
+                onOpenMatrix={onOpenMatrix}
+                onOpenFindings={onOpenFindings}
+                onOpenReport={onOpenReport}
+              />
+            ))}
+          </div>
+        )}
+
+        {showThinking && (
+          <div className="agent-thinking">
+            <span className="typing-dot" />
+            <span className="typing-dot" />
+            <span className="typing-dot" />
+            <span className="agent-thinking-text">
+              {isTutor ? "导师正在思考" : "正在思考"} · {elapsed}s
+            </span>
+          </div>
+        )}
+
+        {isError ? (
+          <div className="bubble-markdown markdown-body">
+            {message.content}
+          </div>
+        ) : (
+          <div
+            className="bubble-markdown markdown-body"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
+          />
+        )}
+        {streaming && (
+          <span className="stream-status">
+            {message.content.trim() ? (
+              <>
+                <span className="stream-caret" />
+                正在输出 · {elapsed}s
+              </>
+            ) : (
+              <>思考中 · {elapsed}s</>
+            )}
+          </span>
+        )}
+
         <div className="bubble-time">{formatTime(message.created_at)}</div>
+
+        {!streaming && message.content.trim() !== "" && !isError && (
+          <div className="msg-actions">
+            <button
+              type="button"
+              className="msg-action"
+              onClick={() => void handleCopyMessage()}
+            >
+              <Copy size={12} />
+              {copied ? "已复制" : "复制"}
+            </button>
+          </div>
+        )}
 
         {isTutor && message.kind !== "error" && message.data?.item_key && onTutorAction && (
           <div className="bubble-actions tutor-actions">
@@ -200,6 +335,108 @@ export default function MessageItem({
       </div>
     </div>
   );
+}
+
+/* ------------------------------------------------------------ 思考过程折叠 */
+function ReasoningBlock({ text, streaming }: { text: string; streaming: boolean }) {
+  const [open, setOpen] = useState(streaming);
+
+  useEffect(() => {
+    setOpen(streaming);
+  }, [streaming]);
+
+  return (
+    <div className={`reasoning-block ${open ? "open" : ""}`}>
+      <button
+        type="button"
+        className="reasoning-head"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+      >
+        <Brain size={12} />
+        <span>思考过程</span>
+        <span className="reasoning-meta">
+          {streaming ? "正在思考…" : `${text.length} 字`}
+        </span>
+        <ChevronRight size={12} className={`reasoning-caret ${open ? "open" : ""}`} />
+      </button>
+      {open && <div className="reasoning-body">{text}</div>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ 执行计划清单 */
+function PlanCard({ plan, streaming }: { plan: PlanState; streaming: boolean }) {
+  const total = plan.steps.length;
+  const done = streaming ? 0 : total;
+  return (
+    <div className="plan-card">
+      <div className="plan-head">
+        <ListChecks size={13} />
+        <span>执行计划</span>
+        <span className="plan-progress">
+          {done}/{total}
+        </span>
+      </div>
+      <ol className="plan-steps">
+        {plan.steps.map((step, index) => {
+          const active = streaming && index === 0;
+          const complete = streaming ? false : true;
+          return (
+            <li
+              key={`${index}-${step.text}`}
+              className={`plan-step ${complete ? "done" : active ? "active" : "pending"}`}
+            >
+              <span className="plan-mark">{complete ? "✓" : active ? "•" : "○"}</span>
+              <span>{step.text}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ 工具函数 */
+function useElapsedSeconds(active: boolean, startIso: string | undefined): number {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!active) {
+      setSeconds(0);
+      return;
+    }
+    const start = startIso ? new Date(startIso).getTime() : Date.now();
+    const tick = () => {
+      const diff = Math.max(0, Math.round((Date.now() - start) / 1000));
+      setSeconds(diff);
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [active, startIso]);
+
+  return seconds;
+}
+
+async function copyToClipboard(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch {
+    /* 降级方案：老浏览器 / 非安全上下文 */
+  }
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.style.position = "fixed";
+  area.style.opacity = "0";
+  document.body.appendChild(area);
+  area.select();
+  try {
+    document.execCommand("copy");
+  } finally {
+    document.body.removeChild(area);
+  }
 }
 
 function itemLabel(itemKey: string): string {

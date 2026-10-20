@@ -193,7 +193,14 @@ marked.setOptions({ renderer: markdownRenderer, gfm: true, breaks: true });
 export function renderMarkdown(text: string): string {
   try {
     const result = marked.parse(text ?? "");
-    return typeof result === "string" ? result : "";
+    const html = typeof result === "string" ? result : "";
+    if (!html) return html;
+    // 代码块注入「复制」按钮：点击事件在消息容器上统一代理（见 MessageItem）
+    return html.replace(
+      /<pre>([\s\S]*?)<\/pre>/g,
+      (_match, inner: string) =>
+        `<pre class="code-block">${inner}<button type="button" class="code-copy" aria-label="复制代码">复制</button></pre>`,
+    );
   } catch {
     return `<p>${escapeHtml(text ?? "")}</p>`;
   }

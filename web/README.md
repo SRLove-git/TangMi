@@ -1,6 +1,6 @@
 # Pentest Agent Web Console（对话式工作台前端）
 
-React 18 + TypeScript + Vite 实现的本地靶场渗透智能体对话式工作台，交互形态参考 Codex / Claude Desktop：**左侧项目与会话，右侧对话线程**。
+React 18 + TypeScript + Vite 实现的本地靶场渗透智能体对话式工作台，交互形态参考 Codex / Claude Code / DSH：**左侧项目与会话，右侧 Agent 对话线程**（流式思考、工具调用卡片、执行计划、随时停止）。
 
 ## 开发
 
@@ -43,7 +43,8 @@ src/
     ├── chat/
     │   ├── Sidebar.tsx       # 左侧：项目 / 会话 / 靶场状态
     │   ├── ChatView.tsx      # 右侧：对话区（欢迎页、消息、实时任务）
-    │   ├── MessageItem.tsx   # 消息气泡 + Markdown + 统计卡片 + 操作按钮
+    │   ├── MessageItem.tsx   # 消息气泡 + 思考折叠 + 工具卡片 + 计划清单 + Markdown
+    │   ├── ToolCallCard.tsx  # Agent 工具调用卡片（参数/状态/耗时/输出展开）
     │   ├── RunCard.tsx       # 实时任务卡片（进度/最新发现/日志）
     │   ├── Composer.tsx      # 输入框 + 快捷提示
     │   ├── Overlay.tsx       # 通用弹窗
@@ -87,6 +88,7 @@ src/
 ## 说明
 
 - 所有数据均来自 `/api`，无本地 mock；
-- 对话事件通过 SSE（`/api/conversations/{id}/stream`）实时推送：消息增量、任务进度、日志、发现；
+- 对话事件通过 SSE（`/api/conversations/{id}/stream`）实时推送：消息增量、**思考增量（reasoning）**、工具调用状态、任务进度、日志、发现；
+- 执行模式由 `pentest_agent/web/llm_agent.py` 的 LLM Agent 循环驱动（function calling 调用本地工具），未配置模型时回退规则引擎；两种模式共用同一套渲染组件；
 - 报告 / 消息 Markdown 渲染前会转义原始 HTML（靶场响应可能包含脚本）；
 - 默认仅连接 `127.0.0.1`，与 CLI 的作用域守卫保持一致。

@@ -15,6 +15,7 @@ import {
   Search,
   Shield,
   ShieldCheck,
+  Sparkles,
   Square,
   Zap,
 } from "lucide-react";
@@ -257,6 +258,17 @@ export default function ChatView({
                 {projectReady ? "已就绪" : "未启动"}
               </span>
             )}
+            <span
+              className={`ai-chip ${system?.llm_configured ? "online" : "offline"}`}
+              title={
+                system?.llm_configured
+                  ? `大模型已就绪：${system.llm_model || "已配置"}，两种模式都可自然语言对话`
+                  : "尚未配置大模型：执行模式将使用规则引擎，教学模式需要先到「设置 → AI 教学模型」配置"
+              }
+            >
+              <Sparkles size={11} />
+              {system?.llm_configured ? system.llm_model || "AI Agent" : "规则模式"}
+            </span>
           </div>
           <div className="chat-subtitle mono">{project.target}</div>
         </div>
@@ -312,8 +324,8 @@ export default function ChatView({
             <h1>{mode === "tutor" ? "卡住了？直接问导师" : "今天想打哪个靶场？"}</h1>
             <p>
               {mode === "tutor"
-                ? "我像实验课助教一样陪你做靶场：先给思路和提示，不直接剧透；贴报错、贴现象、要原理解析都可以。首次使用请在「设置 → AI 教学模型」配置一次。"
-                : "用自然语言告诉我目标与范围，我会自动调用靶场管理、渗透扫描与报告工具，并实时汇报进度。"}
+                ? "我像实验课助教一样陪你做靶场：会先读取真实页面与源码，再给思路和分层提示，不直接剧透；贴报错、贴现象、要原理解析都可以。"
+                : "像 Codex / Claude 一样直接说目标：我会先思考、再调用扫描 / 靶场 / 报告工具，每一步都实时展示，最后给出结论与下一步建议。"}
             </p>
             {renderPromptCards()}
             <button className="btn primary" onClick={onCreateConversation}>
@@ -330,8 +342,8 @@ export default function ChatView({
             <h1>{project.name}</h1>
             <p>
               {mode === "tutor"
-                ? "遇到不会的关卡、看不懂的报错、想不通的 payload，直接输入问题即可。"
-                : "直接输入指令，或选择下方推荐任务开始。"}
+                ? "遇到不会的关卡、看不懂的报错、想不通的 payload，直接输入问题即可；我会先读取当前关卡再回答。"
+                : "直接说出目标即可，例如「先检查靶场状态，再跑一轮 DVWA low 难度」。执行过程会以思考 + 工具卡片的形式实时展示。"}
             </p>
             {renderPromptCards()}
           </div>
@@ -368,7 +380,7 @@ export default function ChatView({
                   <span className="typing-dot" />
                   <span className="typing-dot" />
                   <span className="typing-text">
-                    {mode === "tutor" ? "导师正在思考…" : "正在思考并按计划执行…"}
+                    {mode === "tutor" ? "导师正在连接模型…" : "正在连接模型…"}
                   </span>
                 </div>
               </div>

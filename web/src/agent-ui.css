@@ -1,0 +1,529 @@
+/* ============================================================================
+   Agent 对话体验（Codex / Claude Code 式）
+   思考过程折叠 / 工具调用卡片 / 执行计划清单 / 流式输出 / 代码复制 / 模型徽章
+   依赖 styles.css 中的主题令牌（--bg-* / --text-* / --border-* / --info 等）
+   ============================================================================ */
+
+/* ------------------------------------------------------------- 消息头信息 */
+.agent-meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.agent-meta-line .mode-tag {
+  margin-bottom: 0;
+}
+
+.mode-tag.agent-tag {
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-faint);
+}
+
+.model-chip,
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-faint);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.model-chip {
+  color: var(--text-secondary);
+}
+
+.meta-chip.stopped {
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: transparent;
+}
+
+/* --------------------------------------------------------------- 思考过程 */
+.reasoning-block {
+  margin: 2px 0 10px;
+  border-left: 2px solid var(--border-primary);
+}
+
+.reasoning-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0 4px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 0 6px 6px 0;
+}
+
+.reasoning-head:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+}
+
+.reasoning-meta {
+  margin-left: auto;
+  font-family: var(--font-sub);
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+
+.reasoning-caret {
+  transition: transform 0.18s var(--ease-out);
+  color: var(--text-faint);
+}
+
+.reasoning-caret.open {
+  transform: rotate(90deg);
+}
+
+.reasoning-body {
+  margin: 2px 0 2px 5px;
+  padding: 2px 0 4px 10px;
+  border-left: 1px solid var(--border-secondary);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.68;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+/* ----------------------------------------------------------- 执行计划清单 */
+.plan-card {
+  margin: 2px 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.plan-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.plan-progress {
+  margin-left: auto;
+  font-family: var(--font-sub);
+  font-size: 10.5px;
+  letter-spacing: 0;
+  color: var(--text-faint);
+}
+
+.plan-steps {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.plan-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.plan-step .plan-mark {
+  width: 13px;
+  flex-shrink: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.plan-step.done {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-primary);
+}
+
+.plan-step.done .plan-mark {
+  color: var(--success);
+}
+
+.plan-step.active {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.plan-step.active .plan-mark {
+  color: var(--info);
+  animation: agent-pulse 1.1s infinite ease-in-out;
+}
+
+/* ----------------------------------------------------------- 工具调用卡片 */
+.tool-call-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 2px 0 10px;
+}
+
+.tool-call {
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color 0.18s var(--ease-out);
+}
+
+.tool-call.running {
+  border-color: rgba(37, 99, 235, 0.32);
+}
+
+.tool-call.error {
+  border-color: rgba(220, 38, 38, 0.28);
+  background: var(--danger-soft);
+}
+
+.tool-call-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tool-call-head:hover {
+  background: var(--bg-hover);
+}
+
+.tool-call-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.tool-call.running .tool-call-icon {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.tool-call.error .tool-call-icon {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tool-call-label {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.tool-call-name {
+  font-size: 10px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.tool-call-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-family: var(--font-sub);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tool-call-status.done {
+  color: var(--success);
+}
+
+.tool-call-status.error {
+  color: var(--danger);
+}
+
+.tool-spinner {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--info);
+  border-top-color: transparent;
+  animation: agent-spin 0.7s linear infinite;
+}
+
+.tool-caret {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 0.18s var(--ease-out);
+}
+
+.tool-caret.open {
+  transform: rotate(90deg);
+}
+
+.tool-call-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 9px 10px;
+  border-top: 1px solid var(--border-secondary);
+  padding-top: 8px;
+}
+
+.tool-call-args {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-call-output {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.tool-call-waiting {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.tool-call-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------------------------------------------------------- 流式 / 思考中 */
+.agent-thinking {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 6px 0 4px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.agent-thinking .typing-dot {
+  width: 5px;
+  height: 5px;
+}
+
+.agent-thinking-text {
+  margin-left: 3px;
+  font-family: var(--font-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.stream-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--font-sub);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.stream-caret {
+  display: inline-block;
+  width: 6px;
+  height: 13px;
+  border-radius: 1px;
+  background: var(--text-primary);
+  opacity: 0.8;
+  animation: stream-blink 1s steps(1, end) infinite;
+}
+
+/* ---------------------------------------------------------- 消息操作 / 复制 */
+.msg-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.msg-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+}
+
+.msg-action:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border-color: var(--border-faint);
+}
+
+.bubble-markdown .code-block {
+  position: relative;
+}
+
+.code-copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  line-height: 1.5;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s var(--ease-out);
+}
+
+.code-block:hover .code-copy,
+.code-copy:focus-visible {
+  opacity: 1;
+}
+
+.code-copy:hover {
+  color: var(--text-primary);
+  border-color: var(--border-secondary);
+}
+
+/* --------------------------------------------------------------- 模型徽章 */
+.ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-faint);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  font-family: var(--font-sub);
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ai-chip.online {
+  color: var(--success);
+  background: var(--success-soft);
+  border-color: transparent;
+}
+
+.ai-chip.offline {
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: transparent;
+}
+
+/* 流式中的助手气泡轻微强调 */
+.agent-bubble.streaming {
+  border-color: var(--border-primary);
+}
+
+/* ---------------------------------------------------------------- 动画 */
+@keyframes agent-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes agent-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes stream-blink {
+  0%,
+  49% {
+    opacity: 0.85;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- 响应式 */
+@media (max-width: 900px) {
+  .tool-call-name {
+    display: none;
+  }
+
+  .reasoning-body {
+    max-height: 240px;
+  }
+
+  .ai-chip {
+    display: none;
+  }
+}

@@ -267,7 +267,7 @@ def test_tutor_connection_error_is_friendly(client):
     assert "导师暂时不可用" in assistant["content"]
 
 
-def test_agent_mode_still_uses_rule_engine(client):
+def test_agent_mode_uses_rule_engine_without_llm(client):
     conversation_id = _new_conversation(client)
     response = client.post(
         f"/api/conversations/{conversation_id}/messages",
