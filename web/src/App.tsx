@@ -13,6 +13,7 @@ import LearningView from "./components/views/LearningView";
 import RecordsView from "./components/views/RecordsView";
 import RepeaterView from "./components/views/RepeaterView";
 import SettingsView from "./components/views/SettingsView";
+import ExtensionsView from "./components/views/ExtensionsView";
 import FindingDrawer from "./components/FindingDrawer";
 import type {
   AppView,
@@ -565,6 +566,7 @@ export default function App() {
                 onGoChat={() => setView("chat")}
               />
             )}
+            {view === "extensions" && <ExtensionsView onNotify={notify} />}
             {view === "settings" && (
               <SettingsView project={activeProject} onSaved={refreshProjects} />
             )}

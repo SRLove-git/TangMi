@@ -5,6 +5,7 @@ import {
   CornerDownLeft,
   LayoutDashboard,
   MessageSquare,
+  Puzzle,
   Repeat,
   Search,
   Settings,
@@ -36,6 +37,7 @@ const PAGES: Array<{ view: AppView; label: string; hint: string; icon: LucideIco
   { view: "learning", label: "学习进度", hint: "进度 / 错题本 / 源码 / 出题", icon: BookOpen },
   { view: "repeater", label: "请求重放器", hint: "手工改包重放", icon: Repeat },
   { view: "records", label: "记录", hint: "态势 / 资产 / 漏洞 / 扫描", icon: LayoutDashboard },
+  { view: "extensions", label: "扩展", hint: "安装技能 Skills / 接入 MCP 服务器", icon: Puzzle },
   { view: "settings", label: "设置", hint: "项目与 AI 教学模型", icon: Settings },
 ];
 

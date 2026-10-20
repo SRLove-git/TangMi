@@ -39,11 +39,12 @@
 - **产品化安全管理平台**：扫描结果自动沉淀为**资产台账**与**漏洞库**（SQLite 持久化），支持漏洞生命周期（待确认/已确认/误报/已修复/风险接受）、去重、备注、风险统计、OWASP 分布、扫描历史与 6 种内置扫描策略；界面把安全态势 / 资产 / 漏洞 / 扫描合并为「记录」页四个 Tab。
 - **TypeScript 对话式工作台**：参考 Codex / Claude Desktop 的「左侧项目 + 右侧对话」布局，视觉设计参考 **TREK** 的设计语言（浅色极简、近黑主色、悬浮玻璃顶栏、大圆角卡片、Poppins/Geist 字体、light/dark 双主题）；React + TypeScript + Flask(SSE) 实现，支持自然语言指挥 Agent 执行扫描与靶场操作，实时展示任务卡片、矩阵证据与报告，开箱即用。
 - **Codex / Claude 式 Agent 对话**：执行模式接入 OpenAI 兼容大模型后走真正的 Agent 循环 —— 流式思考过程（reasoning）、function calling 调用 14 个本地工具、多步工具编排、执行计划清单、工具调用卡片与耗时、随时停止；没有配置模型时自动回退规则引擎，离线也能用。
+- **可安装的扩展系统（技能 · MCP）**：新增顶部「扩展」页，像 Claude / Codex / DSH 一样给平台「装东西」——上传 ZIP 或从本地目录安装技能包（`SKILL.md`），Agent 通过 `list_skills` / `use_skill` 自动按技能流程执行；接入 MCP（Model Context Protocol）服务器（stdio / Streamable HTTP），一键测试连接后把 MCP 工具以 `mcp__服务器__工具` 动态并入 Agent 工具列表，支持增删改查、启停、工具清单与连接状态。
 - **AI 教学模式（靶场导师）**：输入框可在「执行模式 / 教学模式」间切换；教学模式接入 OpenAI 兼容 LLM（DeepSeek / OpenAI / 本地 Ollama 均可），把问题连同当前靶场上下文交给模型，以助教方式给思路、分层提示和原理解析（默认不剧透，明确要求才给完整解法），与执行模式共用同一套「思考过程 + 工具卡片 + 流式回复 + 停止」对话 UI，卡住时直接问 AI 即可。
 - **完整学习闭环**：顶部「学习」页把 DVWA 76 关 + SQLi-Labs 69 关做成进度矩阵 —— 标记在学/已掌握/待复习、写错题笔记、看四难度源码 diff、**19+13 张知识卡片**；**AI 出题 + 判题**（≥80 分自动标记已掌握、逐题点评）、**间隔复习**（3/7/14/30 天到期提醒 + 连续学习天数）、**一键导出 Markdown 学习报告**（可选 AI 教练建议）；聊天里的「提示①②③ / 给答案 / 我懂了」按钮会把提示层级与掌握状态自动写入学习档案；⌘K 全局命令面板可搜页面 / 关卡 / 靶场。
 - **请求重放器**：内置简化版 Repeater，手工改 method / URL / headers / body 重放请求，实时查看原始响应、响应头与沙箱渲染结果，学 SQLi / XSS / 越权时最直接的验证工具。
 - **靶场部署中心**：顶部「靶场部署」页内置 16 个常见公开靶场（Juice Shop / WebGoat / Mutillidae / bWAPP / Pikachu / Upload-Labs / DVGA / VAmPI / Metasploitable2 / Redis 未授权等），一键 Docker 部署、实时日志、自动端口分配、自动复用本机已有容器，也可以在对话里直接说「部署 Juice Shop」让 Agent 安装。
-- **工程化**：`HttpClient` 统一会话/证据/限速/重试，`Finding/LabRun` 数据模型，SQLite 资产/漏洞台账，Markdown + HTML + JSON 三种报告，118 个自动化测试（含 5 个离线 Agent 循环测试），Docker 化靶场，一键启动脚本，中文文档。
+- **工程化**：`HttpClient` 统一会话/证据/限速/重试，`Finding/LabRun` 数据模型，SQLite 资产/漏洞台账，Markdown + HTML + JSON 三种报告，127 个自动化测试（含 Agent 循环 / 技能 / MCP 的离线测试），Docker 化靶场，一键启动脚本，中文文档。
 
 ## 2. 靶场支持矩阵
 
@@ -166,7 +167,7 @@ python -m pentest_agent web
 # 自动打开浏览器：http://127.0.0.1:8777
 ```
 
-界面采用「左侧项目 + 右侧对话」布局：左侧管理项目和会话，右侧直接和 Agent 对话下指令，执行过程以「思考过程 + 工具调用卡片 + 任务卡片」实时回显，结果可打开矩阵与报告查看。输入框上方可在「执行模式 / 教学模式」间切换：执行模式像 Codex 一样由大模型自主调用扫描 / 靶场 / 报告工具完成多步任务（需先在「设置 → AI 教学模型」配置 LLM），教学模式在卡住时当 AI 导师答疑。详见 [5. Web 图形界面（TypeScript · 对话式工作台）](#5-web-图形界面typescript--对话式工作台)。
+界面采用「左侧项目 + 右侧对话」布局：左侧管理项目和会话，右侧直接和 Agent 对话下指令，执行过程以「思考过程 + 工具调用卡片 + 任务卡片」实时回显，结果可打开矩阵与报告查看。输入框上方可在「执行模式 / 教学模式」间切换：执行模式像 Codex 一样由大模型自主调用扫描 / 靶场 / 报告工具完成多步任务（需先在「设置 → AI 教学模型」配置 LLM），教学模式在卡住时当 AI 导师答疑；顶部「扩展」页还可以安装技能（Skills）与接入 MCP 服务器来扩展 Agent 能力。详见 [5. Web 图形界面（TypeScript · 对话式工作台）](#5-web-图形界面typescript--对话式工作台)。
 
 ### 3.6 扫描任意授权目标（通用渗透）
 
@@ -375,14 +376,48 @@ export PENTEST_LLM_MODEL=deepseek-flash
 ![AI 教学模型配置与模型探测](docs/screenshots/settings_llm.png)
 
 
-### 5.5 技术实现
+### 5.5 扩展系统（技能 Skills · MCP 服务器）
 
-- **前端**：`web/`，React 18 + TypeScript + Vite + marked；`src/components/chat/` 下为 Sidebar / ChatView / MessageItem / ToolCallCard / RunCard / Composer / 各类弹窗组件，Agent 对话样式在 `src/agent-ui.css`（思考折叠 / 工具卡 / 计划清单 / 流式光标 / 代码复制）；
+顶部导航新增「扩展」页，让平台像 Claude / Codex / DSH 一样可以「装东西」：**技能**扩展 Agent 的流程知识，**MCP** 扩展 Agent 的工具能力。配置默认只保存在本机 `web_data/`，下一轮对话立即生效。
+
+![技能管理](docs/screenshots/extensions_skills.png)
+
+#### 技能（Skills）
+
+- **技能包格式**：一个文件夹 + 根目录 `SKILL.md`（可选 YAML frontmatter `name` / `description`），可附带 `scripts/`、`references/` 等资源；仓库内置 3 个示例技能（Web 信息收集、SQLi 手工排查、报告撰写规范）位于 `skills/`；
+- **安装方式**：上传 ZIP（自动校验路径穿越、文件数 / 体积上限，兼容「根目录带 SKILL.md」或「唯一子目录带 SKILL.md」两种打包方式），或填写本地目录路径安装；安装到 `web_data/skills/`；
+- **管理**：列表 / 预览 `SKILL.md` / 启用停用 / 删除（内置技能只读）；启停状态写入 `web_data/extensions.json`；
+- **Agent 自动使用**：技能名与描述会注入系统提示，模型需要时调用 `list_skills` 列出技能、`use_skill` 读取正文后严格按步骤执行（可继续调用其它工具完成技能流程）。
+
+![技能预览](docs/screenshots/extensions_skill_preview.png)
+
+#### MCP（Model Context Protocol）
+
+- **两种传输**：`stdio`（本地子进程：python / npx / uvx 启动的 MCP Server）与 `http`（Streamable HTTP JSON-RPC 端点，可自定义请求头）；配置保存在 `web_data/mcp_servers.json`；
+- **管理界面**：新增 / 编辑 / 删除 / 启用停用服务器，一键「测试连接」返回延迟、服务端信息与工具清单；同时显示连接状态、工具数与错误原因；
+- **工具自动并入 Agent**：MCP 工具以 `mcp__<服务器>__<工具>` 的名字动态注册给大模型（自动带上 JSON Schema），模型可以像本地工具一样调用；连接按需建立，某个服务器失败会自动降级、不影响普通对话；
+- **演示服务器**：仓库自带 `scripts/demo_mcp_server.py`（`echo` / `now` / `add` / `wordlist`），添加时命令填 `python3`、参数填 `scripts/demo_mcp_server.py` 即可体验；界面也内置官方 Filesystem Server 预设；
+- **安全边界**：stdio 服务器会以当前用户权限执行本地命令，请只接入可信来源；HTTP 建议只连本机 / 内网地址；所有 MCP 调用都在本机进行。
+
+![MCP 服务器管理](docs/screenshots/extensions_mcp.png)
+
+![MCP 配置表单](docs/screenshots/extensions_mcp_form.png)
+
+![扩展页深色模式](docs/screenshots/extensions_dark.png)
+
+> 实测（真实 DeepSeek 模型）：对话中先 `list_skills` → `use_skill` 读取「Web 信息收集与攻击面梳理」→ 按技能第一步调用 `get_current_context`；另一次对话成功调用 MCP `echo`（回显）与 `add`（12 + 30 = 42），工具卡片耗时均 < 1ms（本地 stdio）。
+
+![Agent 调用技能与 MCP 工具](docs/screenshots/agent_chat_extensions.png)
+
+### 5.6 技术实现
+
+- **前端**：`web/`，React 18 + TypeScript + Vite + marked；`src/components/chat/` 下为 Sidebar / ChatView / MessageItem / ToolCallCard / RunCard / Composer / 各类弹窗组件，`src/components/views/ExtensionsView.tsx` 为技能 / MCP 管理页，样式分别在 `src/agent-ui.css`（思考折叠 / 工具卡 / 计划清单 / 流式光标 / 代码复制）与 `src/extensions.css`；
 - **后端**：`pentest_agent/web/` 十个模块 + `pentest_agent/knowledge/` 知识卡片：
   - `server.py`：Flask REST API + SSE；
   - `runs.py`：扫描 / 靶场任务管理与历史；
   - `chat.py`：项目 / 会话 / 消息存储与事件流；
   - `llm_agent.py`：**LLM Agent 循环**（流式 reasoning / function calling / 多步工具编排 / 思考与工具事件），执行模式与教学模式共用；
+  - `extensions.py`：**扩展系统**（技能扫描 / ZIP 安装 / 启停 / 预览 + MCP stdio/HTTP 客户端、连接管理与工具动态注册）；
   - `agent.py`：对话式 Agent 工具层（意图解析 + 扫描 / 靶场 / 报告 / 部署等工具实现，供 LLM Agent 循环调用）；
   - `tutor.py`：AI 教学模型配置与教学 Prompt（OpenAI 兼容 LLM 客户端、靶场上下文、配置读写）；
   - `deploy.py`：靶场部署中心（靶场目录、Docker 拉取/运行/启停、端口分配、健康检查、状态复用）；
@@ -395,7 +430,7 @@ export PENTEST_LLM_MODEL=deepseek-flash
 - **数据持久化**：项目与会话保存在 `web_data/chat.json`，任务历史在 `web_runs/`，AI 教学模型配置在 `web_data/llm_settings.json`，靶场部署记录在 `web_data/labs_deploy.json`，学习进度 / 笔记 / 复习计划 / 出题成绩在 `web_data/learning.json`，学习报告写入 `reports/learning_report_*.md`；对话触发的扫描会自动生成 Markdown / JSON 报告到 `reports/`；
 - **安全**：默认只监听 `127.0.0.1`；新建项目与切换目标都会经过作用域守卫；Agent 回复与报告在渲染前转义原始 HTML，避免靶场回显被执行。
 
-### 5.6 前端开发模式
+### 5.7 前端开发模式
 
 ```bash
 cd web
@@ -404,7 +439,7 @@ npm run dev          # http://127.0.0.1:5173 ，/api 自动代理到 8777
 npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent web 托管
 ```
 
-### 5.7 主要 API
+### 5.8 主要 API
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
@@ -436,7 +471,7 @@ npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent
 | GET | `/api/reports` / `/api/reports/{name}` | 报告列表 / 报告内容 |
 | GET | `/api/results/latest` | 最新一次全量验证结果 JSON |
 
-### 5.8 视觉设计（参考 TREK）
+### 5.9 视觉设计（参考 TREK）
 
 界面视觉参考 [TREK](https://github.com/liketrek/TREK) 的设计系统，落地为可主题化的设计令牌（`web/src/styles.css`）：
 
@@ -452,7 +487,7 @@ npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent
 
 所有界面组件（顶栏、侧栏、对话、任务卡片、矩阵、发现列表、报告）都使用同一套令牌，因此新增页面无需额外适配即可自动跟随主题。
 
-### 5.9 靶场部署中心（一键安装常见靶场）
+### 5.10 靶场部署中心（一键安装常见靶场）
 
 顶部「靶场部署」页把常见公开靶场做成了一个应用市场：点击卡片上的「一键部署」，平台自动完成 `docker pull` → `docker run` → 等待就绪，全程日志实时回传；部署完成后可以直接打开地址，或在工作台新建项目交给 Agent 扫描。
 
@@ -465,7 +500,7 @@ npm run build        # 生产构建到 web/dist，再由 python -m pentest_agent
 
 ![靶场部署](docs/screenshots/deploy.png)
 
-### 5.10 完整学习闭环（学 → 练 → 复习 → 报告）
+### 5.11 完整学习闭环（学 → 练 → 复习 → 报告）
 
 「学习」页把 145 个关卡（DVWA 76 + SQLi-Labs 69）做成了可追踪的学习档案，形成完整闭环：
 
@@ -786,6 +821,7 @@ python项目课/
 │   │   ├── policies.py            # 内置扫描策略（6 种）
 │   │   ├── chat.py                # 项目/会话/消息存储（含认证头/策略配置）
 │   │   ├── llm_agent.py           # LLM Agent 循环：流式思考 + function calling + 多步工具
+│   │   ├── extensions.py          # 扩展系统：技能安装管理 + MCP stdio/HTTP 客户端
 │   │   └── agent.py               # 对话式 Agent 工具层：工具实现（静默模式供 LLM 调用）
 │   ├── labs/
 │   │   ├── dvwa.py                # DVWA 19 模块 × 4 难度解题器
@@ -801,11 +837,14 @@ python项目课/
 │   └── knowledge/                 # 可扩展的题库/配置数据
 ├── web/                           # TypeScript 前端（React + Vite）
 │   ├── src/components/chat/       # 对话工作台组件（Sidebar/ChatView/MessageItem/ToolCallCard/...）
+│   ├── src/components/views/ExtensionsView.tsx  # 扩展页：技能 / MCP 管理
 │   ├── src/agent-ui.css           # Agent 对话样式（思考折叠/工具卡/计划清单/流式光标）
+│   ├── src/extensions.css         # 扩展页样式
 │   ├── src/components/views/      # 平台工作区：态势/资产/漏洞/扫描/设置
 │   ├── src/                       # API 客户端、类型、样式
 │   ├── dist/                      # 构建产物（已附带，可直接使用）
 │   └── package.json
+├── skills/                        # 内置技能（SKILL.md 技能包：侦察 / SQLi / 报告）
 ├── labs/
 │   ├── docker-compose.yml         # DVWA + MariaDB + SQLi-Labs 编排
 │   └── docker/DVWA.Dockerfile     # DVWA 镜像构建（国内源加速）
@@ -818,7 +857,8 @@ python项目课/
 ├── scripts/
 │   ├── start.sh                   # 一键启动平台（可选拉起靶场/演示目标）
 │   ├── verify_all.sh              # 一键验收脚本（启动靶场 + 验证 + 报告）
-│   └── demo_target.py             # 演示用「故意有漏洞」Web 应用
+│   ├── demo_target.py             # 演示用「故意有漏洞」Web 应用
+│   └── demo_mcp_server.py         # 演示用 MCP Server（stdio：echo/now/add/wordlist）
 ├── tests/                         # 单元测试 + live 集成测试 + Web API/进阶扫描测试
 ├── requirements.txt
 └── README.md
@@ -854,9 +894,10 @@ python -m pentest_agent verify
 | `verify` 全量耗时 | 实测 **1.5–2.5 分钟**（DVWA + SQLi-Labs，含浏览器验证；冷/热缓存不同） |
 | 浏览器验证 | Playwright + 本机 Chrome 无头模式，实际捕获 `alert` 弹窗；未安装时自动降级为 HTTP 层证据 |
 | 报告产物 | `reports/pentest_report.md`（人读）、`reports/pentest_results.json`（机读） |
-| 单元测试 | `python -m pytest tests/ -q`，**115 passed / 3 live deselected**（核心模型、SQLi 目录、Web API、通用扫描、进阶扫描、平台数据、AI 教学模式、**LLM Agent 循环**等 118 个用例） |
+| 单元测试 | `python -m pytest tests/ -q`，**124 passed / 3 live deselected**（核心模型、SQLi 目录、Web API、通用扫描、进阶扫描、平台数据、AI 教学模式、LLM Agent 循环、**技能 / MCP 扩展系统**等 127 个用例） |
 | 集成验收 | `python -m pytest tests/test_live.py -m live -v`（需靶场运行，跑完整 76+69 关，实测 3 passed / 2m23s） |
 | Web 对话工作台 | 左侧项目/会话 + 右侧对话、自然语言指令、实时任务卡片、矩阵证据、报告预览均实测通过（Playwright 截图验证），见 `docs/screenshots/` |
+| 扩展系统（技能 / MCP） | 技能：ZIP 上传（含路径穿越拦截）/ 本地目录安装 / 启停 / 预览实测通过，内置 3 个技能；MCP：stdio 演示服务器与本地 HTTP mock 均连接成功，真实 DeepSeek 对话中成功调用 `list_skills` / `use_skill` / `mcp__Demo_MCP__echo` / `mcp__Demo_MCP__add` |
 | Agent 对话（Codex 式） | 真实 DeepSeek API 实测：流式思考 + function calling 依次调用 `update_plan` → `get_status` → `run_dvwa` → `get_results`，约 3s 完成「检查状态 → 跑 DVWA low 的 SQL 注入 → 总结」多步任务；停止 / 取消 / 教学模式分层提示均验证通过 |
 | 通用 Web 渗透 | 对本地演示目标实测发现 **20 条风险（严重 4/高危 7/中危 5/低危 2/信息 2）**：SQLi/SSTI/SSRF/命令注入/LFI/XSS/敏感文件/JS 密钥/JWT alg=none/GraphQL/CSRF/Host 头等 |
 | 平台数据闭环 | 扫描后自动写入 SQLite：实测 20 条漏洞、12 项资产、扫描历史 1 条；仪表盘统计、漏洞状态流转、资产筛选均在浏览器中验证通过 |

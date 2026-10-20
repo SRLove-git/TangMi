@@ -52,6 +52,7 @@ src/
     │   ├── FindingsModal.tsx # 通用扫描发现（按风险等级分组）
     │   ├── ReportModal.tsx   # 报告弹窗
     │   └── NewProjectModal.tsx
+    ├── views/ExtensionsView.tsx  # 扩展页：技能安装 / MCP 服务器管理
     ├── MatrixView.tsx        # DVWA 矩阵 + SQLi 关卡网格（复用）
     ├── FindingDrawer.tsx     # 证据抽屉（复用）
     └── ReportView.tsx        # 报告渲染（复用）
@@ -69,6 +70,14 @@ src/
 - **设置**：项目扫描策略、认证请求头、浏览器验证与外部目标授权开关。
 
 平台数据来自后端 `/api/dashboard`、`/api/assets`、`/api/vulnerabilities`、`/api/scans`、`/api/policies`，组件位于 `src/components/views/`。
+
+## 扩展（技能 / MCP）
+
+顶部导航「扩展」页对应 `src/components/views/ExtensionsView.tsx`：
+
+- **技能**：上传 ZIP 或填写本地目录安装包含 `SKILL.md` 的技能包，支持启用/停用、预览、删除；后端在 `pentest_agent/web/extensions.py`；
+- **MCP**：新增 / 编辑 / 删除 / 启用 MCP 服务器（stdio 或 Streamable HTTP），一键测试连接并展示工具清单；
+- 安装后 LLM Agent 自动通过 `list_skills` / `use_skill` / `mcp__<server>__<tool>` 使用这些扩展能力。
 
 ## 进阶扫描展示
 

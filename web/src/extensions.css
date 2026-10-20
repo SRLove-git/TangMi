@@ -1,0 +1,532 @@
+/* ============================================================================
+   扩展页（技能 Skills / MCP 服务器）
+   复用 styles.css 的主题令牌与 .card / .btn / .field-label 等基础类
+   ============================================================================ */
+
+.extensions-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ------------------------------------------------------------------ tabs */
+.ext-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-faint);
+  width: fit-content;
+}
+
+.ext-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s var(--ease-out);
+}
+
+.ext-tab:hover {
+  color: var(--text-primary);
+}
+
+.ext-tab.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.ext-tab-count {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--bg-selected);
+  color: var(--text-secondary);
+  font-family: var(--font-sub);
+  font-size: 10px;
+  line-height: 17px;
+  text-align: center;
+}
+
+.ext-tab.active .ext-tab-count {
+  background: var(--accent-subtle);
+}
+
+/* ------------------------------------------------------------ 安装技能 */
+.ext-install-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ext-install-card .card-head {
+  margin-bottom: 0;
+}
+
+.ext-install-card code {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.ext-install-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ext-install-divider {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.ext-path-input {
+  flex: 1;
+  min-width: 260px;
+}
+
+/* ------------------------------------------------------------ 卡片网格 */
+.ext-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ext-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ext-grid-mcp {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card.ext-skill-card,
+.card.ext-mcp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ext-skill-card.disabled,
+.ext-mcp-card.disabled {
+  opacity: 0.62;
+}
+
+.ext-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ext-card-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ext-card-title h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 340px;
+}
+
+.ext-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.ext-icon.builtin {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+.ext-icon.installed {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.ext-icon.mcp {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ext-subline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ext-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.6;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.ext-badge.builtin,
+.ext-badge.ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ext-badge.installed {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.ext-badge.transport {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.ext-badge.off {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.ext-id {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.ext-desc {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ext-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--text-faint);
+  font-family: var(--font-sub);
+  font-size: 10.5px;
+}
+
+.ext-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ext-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 2px;
+}
+
+.ext-switch {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.ext-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 22px;
+}
+
+.ext-mcp-empty {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.ext-mcp-empty b {
+  color: var(--text-primary);
+  font-size: 13.5px;
+}
+
+.ext-mcp-empty p {
+  margin: 4px 0 0;
+  max-width: 620px;
+}
+
+.ext-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ------------------------------------------------------------ MCP 概览 */
+.ext-mcp-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ext-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 86px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-faint);
+}
+
+.ext-stat span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.ext-stat b {
+  font-family: var(--font-sub);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.ext-mcp-status .btn {
+  margin-left: auto;
+}
+
+.ext-mono {
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.ext-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.ext-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.ext-status.up {
+  color: var(--success);
+}
+
+.ext-status.up::before {
+  background: var(--success);
+}
+
+.ext-test-ok,
+.ext-test-error {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.ext-test-ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.ext-test-error {
+  background: var(--danger-soft);
+  color: var(--danger);
+  word-break: break-word;
+}
+
+.ext-tool-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ext-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--border-faint);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.ext-tool-chip.mono {
+  font-family: var(--font-mono);
+}
+
+/* ------------------------------------------------------------ MCP 表单 */
+.ext-mcp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ext-mcp-form .card-head {
+  margin-bottom: 0;
+}
+
+.ext-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ext-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.ext-form-grid > div,
+.ext-form-row > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ext-textarea {
+  min-height: 64px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.ext-form-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ext-form-actions .form-hint {
+  margin: 0;
+}
+
+.ext-footnote {
+  margin-top: 2px;
+}
+
+/* ------------------------------------------------------------ 技能预览 */
+.ext-skill-content {
+  margin: 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-faint);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 52vh;
+  overflow: auto;
+}
+
+.ext-skill-files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ext-spin {
+  animation: ext-spin 0.8s linear infinite;
+}
+
+@keyframes ext-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------ 响应式 */
+@media (max-width: 1280px) {
+  .ext-grid,
+  .ext-grid-mcp {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ext-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .ext-mcp-status .btn {
+    margin-left: 0;
+  }
+
+  .ext-card-title h4 {
+    max-width: 200px;
+  }
+}

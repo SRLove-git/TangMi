@@ -34,6 +34,13 @@ import type {
   RunSnapshot,
   SendMessageResponse,
   SystemInfo,
+  ExtensionsSnapshot,
+  SkillDetail,
+  SkillItem,
+  MCPServerConfig,
+  MCPTestResult,
+  MCPToolInfo,
+  MCPUpsertPayload,
 } from "./types";
 
 const API = "/api";
@@ -237,6 +244,69 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  // ------------------------------------------------------------ 扩展（技能 / MCP）
+  extensions: () => request<ExtensionsSnapshot>("/extensions"),
+  skills: () => request<{ skills: SkillItem[] }>("/extensions/skills"),
+  skillDetail: (id: string) =>
+    request<SkillDetail>(`/extensions/skills/${encodeURIComponent(id)}`),
+  installSkillZip: async (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${API}/extensions/skills/install`, {
+      method: "POST",
+      body: form,
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      skill?: SkillItem;
+    };
+    if (!res.ok) throw new Error(data.error || `安装失败（${res.status}）`);
+    return data;
+  },
+  installSkillPath: (path: string) =>
+    request<{ ok: boolean; skill: SkillItem }>("/extensions/skills/install-path", {
+      method: "POST",
+      body: JSON.stringify({ path }),
+    }),
+  toggleSkill: (id: string, enabled: boolean) =>
+    request<{ ok: boolean; skill: SkillItem }>(
+      `/extensions/skills/${encodeURIComponent(id)}`,
+      { method: "PATCH", body: JSON.stringify({ enabled }) },
+    ),
+  deleteSkill: (id: string) =>
+    request<{ ok: boolean; skills: SkillItem[] }>(
+      `/extensions/skills/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
+    ),
+  mcpServers: () =>
+    request<{
+      servers: MCPServerConfig[];
+      status: { enabled: number; connected: number; tools: number };
+    }>("/extensions/mcp"),
+  saveMcpServer: (payload: MCPUpsertPayload) =>
+    request<{ ok: boolean; server: MCPServerConfig }>("/extensions/mcp", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  toggleMcpServer: (id: string, enabled: boolean) =>
+    request<{ ok: boolean; server: MCPServerConfig }>(
+      `/extensions/mcp/${encodeURIComponent(id)}`,
+      { method: "PATCH", body: JSON.stringify({ enabled }) },
+    ),
+  deleteMcpServer: (id: string) =>
+    request<{ ok: boolean; servers: MCPServerConfig[] }>(
+      `/extensions/mcp/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
+    ),
+  testMcpServer: (id: string) =>
+    request<MCPTestResult>(`/extensions/mcp/${encodeURIComponent(id)}/test`, {
+      method: "POST",
+    }),
+  mcpServerTools: (id: string) =>
+    request<{ server_id: string; tools: MCPToolInfo[] }>(
+      `/extensions/mcp/${encodeURIComponent(id)}/tools`,
+    ),
 };
 
 export interface StreamHandlers<T = RunEvent> {

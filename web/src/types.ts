@@ -327,6 +327,7 @@ export type AppView =
   | "learning"
   | "repeater"
   | "records"
+  | "extensions"
   | "settings";
 
 export interface ScanPolicy {
@@ -692,4 +693,86 @@ export interface LocalLabSources {
   total: number;
   online: number;
   root: string;
+}
+
+
+/* ------------------------------------------------------------- 扩展（技能 / MCP） */
+export interface SkillItem {
+  id: string;
+  name: string;
+  description: string;
+  source: "builtin" | "installed";
+  path: string;
+  files: number;
+  size: number;
+  entries: string[];
+  updated_at: string;
+  enabled: boolean;
+}
+
+export interface SkillDetail extends SkillItem {
+  content: string;
+  file_list: string[];
+}
+
+export interface MCPToolInfo {
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+}
+
+export interface MCPServerConfig {
+  id: string;
+  name: string;
+  transport: "stdio" | "http";
+  enabled: boolean;
+  description?: string;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  url?: string;
+  headers?: Record<string, string>;
+  timeout?: number;
+  connected?: boolean;
+  tool_count?: number;
+  tools?: MCPToolInfo[];
+  last_error?: string;
+  config_path?: string;
+}
+
+export interface ExtensionsStatus {
+  enabled: number;
+  connected: number;
+  tools: number;
+}
+
+export interface ExtensionsSnapshot {
+  skills: SkillItem[];
+  mcp: {
+    servers: MCPServerConfig[];
+    status: ExtensionsStatus;
+    config_path: string;
+  };
+}
+
+export interface MCPTestResult {
+  ok: boolean;
+  latency_ms?: number;
+  tools?: MCPToolInfo[];
+  server_info?: Record<string, unknown>;
+  error?: string;
+}
+
+export interface MCPUpsertPayload {
+  id?: string;
+  name: string;
+  transport: "stdio" | "http";
+  enabled?: boolean;
+  description?: string;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  url?: string;
+  headers?: Record<string, string>;
+  timeout?: number;
 }

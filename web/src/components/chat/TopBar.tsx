@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Moon,
   Plus,
+  Puzzle,
   Repeat,
   Search,
   Settings,
@@ -30,6 +31,7 @@ const NAV_ITEMS: Array<{ id: AppView; label: string; icon: LucideIcon }> = [
   { id: "learning", label: "学习", icon: BookOpen },
   { id: "repeater", label: "重放器", icon: Repeat },
   { id: "records", label: "记录", icon: LayoutDashboard },
+  { id: "extensions", label: "扩展", icon: Puzzle },
   { id: "settings", label: "设置", icon: Settings },
 ];
 

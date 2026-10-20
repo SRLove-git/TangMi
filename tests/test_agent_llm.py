@@ -6,134 +6,26 @@
 
 运行：.venv/bin/python -m pytest tests/test_agent_llm.py -q
 """
-
 from __future__ import annotations
 
 import json
-import socket
 import sys
-import threading
-import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from pentest_agent.web.server import create_app  # noqa: E402
-
-
-# --------------------------------------------------------------------- 工具
-def _free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return int(sock.getsockname()[1])
-
-
-def _wait_for_reply(test_client, conversation_id: str, timeout: float = 15.0) -> dict:
-    deadline = time.time() + timeout
-    last: dict | None = None
-    while time.time() < deadline:
-        response = test_client.get(f"/api/conversations/{conversation_id}")
-        last = response.get_json()
-        messages = last.get("messages") or []
-        if not last.get("busy") and any(item["role"] == "assistant" for item in messages):
-            return last
-        time.sleep(0.05)
-    raise AssertionError(f"等待 Agent 回复超时，最后状态：{last}")
-
-
-def _text_parts(text: str, size: int = 6) -> list[str]:
-    return [text[index : index + size] for index in range(0, len(text), size)]
-
-
-class MockLLM:
-    """按脚本返回流式响应的本地 OpenAI 兼容服务。"""
-
-    def __init__(self, script: list[dict] | None = None) -> None:
-        self.script = list(script or [])
-        self.captured: list[dict] = []
-        owner = self
-
-        class Handler(BaseHTTPRequestHandler):
-            def do_POST(self):  # noqa: N802
-                length = int(self.headers.get("Content-Length") or 0)
-                raw = self.rfile.read(length) if length else b"{}"
-                try:
-                    body = json.loads(raw)
-                except json.JSONDecodeError:
-                    body = {}
-                owner.captured.append(
-                    {"headers": dict(self.headers), "body": body}
-                )
-                item = owner.script.pop(0) if owner.script else {"content": ["好的。"]}
-                self.send_response(200)
-                self.send_header("Content-Type", "text/event-stream")
-                self.send_header("Cache-Control", "no-cache")
-                self.end_headers()
-                self._write_script(item)
-                self.wfile.flush()
-
-            def _write_script(self, item: dict) -> None:
-                for part in _text_parts(str(item.get("reasoning") or "")):
-                    self._chunk({"reasoning_content": part})
-                for part in _text_parts(str(item.get("content") or "")):
-                    self._chunk({"content": part})
-                for call in item.get("tool_calls") or []:
-                    arguments = json.dumps(call.get("arguments") or {}, ensure_ascii=False)
-                    first, rest = arguments[: max(1, len(arguments) // 2)], arguments[
-                        max(1, len(arguments) // 2) :
-                    ]
-                    self._chunk(
-                        {
-                            "tool_calls": [
-                                {
-                                    "index": 0,
-                                    "id": call.get("id") or "call_test_1",
-                                    "type": "function",
-                                    "function": {
-                                        "name": call["name"],
-                                        "arguments": first,
-                                    },
-                                }
-                            ]
-                        }
-                    )
-                    if rest:
-                        self._chunk(
-                            {
-                                "tool_calls": [
-                                    {
-                                        "index": 0,
-                                        "function": {"arguments": rest},
-                                    }
-                                ]
-                            }
-                        )
-                self.wfile.write(b"data: [DONE]\n\n")
-
-            def _chunk(self, delta: dict) -> None:
-                chunk = {"choices": [{"delta": delta, "index": 0}]}
-                self.wfile.write(
-                    f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n".encode()
-                )
-                self.wfile.flush()
-
-            def log_message(self, *_args):  # 静音
-                return
-
-        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
-        self.thread.start()
-
-    @property
-    def url(self) -> str:
-        return f"http://127.0.0.1:{self.server.server_address[1]}"
-
-    def close(self) -> None:
-        self.server.shutdown()
-        self.server.server_close()
+from mock_llm import (  # noqa: E402
+    MockLLM,
+    configure_llm,
+    free_port,
+    new_conversation,
+    send_message,
+    wait_for_reply,
+)
 
 
 # --------------------------------------------------------------------- fixture
@@ -152,7 +44,7 @@ def mock_llm():
     service.close()
 
 
-def _configure(client, base_url: str) -> dict:
+def configure_llm(client, base_url: str) -> dict:
     response = client.put(
         "/api/settings/llm",
         json={
@@ -167,7 +59,7 @@ def _configure(client, base_url: str) -> dict:
     return response.get_json()
 
 
-def _new_conversation(client) -> str:
+def new_conversation(client) -> str:
     projects = client.get("/api/projects").get_json()["projects"]
     dvwa = next(item for item in projects if item["lab"] == "dvwa")
     created = client.post(f"/api/projects/{dvwa['id']}/conversations", json={})
@@ -175,7 +67,7 @@ def _new_conversation(client) -> str:
     return created.get_json()["id"]
 
 
-def _send(client, conversation_id: str, content: str, mode: str = "agent"):
+def send_message(client, conversation_id: str, content: str, mode: str = "agent"):
     return client.post(
         f"/api/conversations/{conversation_id}/messages",
         json={"content": content, "mode": mode},
@@ -190,12 +82,12 @@ def test_agent_mode_streams_reasoning_and_content(client, mock_llm):
             "content": "你好，我是本机靶场渗透测试智能体。",
         }
     ]
-    _configure(client, mock_llm.url)
-    conversation_id = _new_conversation(client)
-    response = _send(client, conversation_id, "你好，介绍一下你自己")
+    configure_llm(client, mock_llm.url)
+    conversation_id = new_conversation(client)
+    response = send_message(client, conversation_id, "你好，介绍一下你自己")
     assert response.status_code == 201
 
-    state = _wait_for_reply(client, conversation_id)
+    state = wait_for_reply(client, conversation_id)
     assistant = state["messages"][-1]
     assert assistant["role"] == "assistant"
     assert assistant["content"] == "你好，我是本机靶场渗透测试智能体。"
@@ -245,11 +137,11 @@ def test_agent_mode_executes_tool_and_continues_loop(client, mock_llm):
         },
         {"content": "靶场容器、DVWA 与 SQLi-Labs 均正常，随时可以开跑。"},
     ]
-    _configure(client, mock_llm.url)
-    conversation_id = _new_conversation(client)
-    _send(client, conversation_id, "先看下靶场状态，然后给我结论")
+    configure_llm(client, mock_llm.url)
+    conversation_id = new_conversation(client)
+    send_message(client, conversation_id, "先看下靶场状态，然后给我结论")
 
-    state = _wait_for_reply(client, conversation_id)
+    state = wait_for_reply(client, conversation_id)
     assistant = state["messages"][-1]
     assert assistant["content"].endswith("随时可以开跑。")
     assert "\n\n" in assistant["content"]  # 工具轮之间的分段
@@ -285,11 +177,11 @@ def test_agent_mode_tool_error_is_reported_and_model_can_recover(client, mock_ll
         },
         {"content": "目标地址不合法，需要以 http:// 或 https:// 开头。"},
     ]
-    _configure(client, mock_llm.url)
-    conversation_id = _new_conversation(client)
-    _send(client, conversation_id, "把目标改成 ftp://example.com")
+    configure_llm(client, mock_llm.url)
+    conversation_id = new_conversation(client)
+    send_message(client, conversation_id, "把目标改成 ftp://example.com")
 
-    state = _wait_for_reply(client, conversation_id)
+    state = wait_for_reply(client, conversation_id)
     assistant = state["messages"][-1]
     assert assistant["content"].startswith("目标地址不合法")
     tool = assistant["data"]["tools"][0]
@@ -300,9 +192,9 @@ def test_agent_mode_tool_error_is_reported_and_model_can_recover(client, mock_ll
 
 
 def test_agent_mode_uses_rule_engine_without_llm(client):
-    conversation_id = _new_conversation(client)
-    _send(client, conversation_id, "你能干什么")
-    state = _wait_for_reply(client, conversation_id)
+    conversation_id = new_conversation(client)
+    send_message(client, conversation_id, "你能干什么")
+    state = wait_for_reply(client, conversation_id)
     assistant = state["messages"][-1]
     assert assistant["kind"] in ("help", "text")
     assert "教学模式" in assistant["content"]
@@ -311,10 +203,10 @@ def test_agent_mode_uses_rule_engine_without_llm(client):
 
 
 def test_agent_llm_connection_error_is_friendly(client):
-    _configure(client, f"http://127.0.0.1:{_free_port()}/v1")
-    conversation_id = _new_conversation(client)
-    _send(client, conversation_id, "你好")
-    state = _wait_for_reply(client, conversation_id)
+    configure_llm(client, f"http://127.0.0.1:{free_port()}/v1")
+    conversation_id = new_conversation(client)
+    send_message(client, conversation_id, "你好")
+    state = wait_for_reply(client, conversation_id)
     assistant = state["messages"][-1]
     assert assistant["kind"] == "error"
     assert "智能体暂时不可用" in assistant["content"]
